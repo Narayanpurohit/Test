@@ -1,43 +1,35 @@
 # bot.py
 import logging
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, MessageHandler, Filters, CallbackContext
+from config import API_ID, API_HASH, BOT_TOKEN
 
 # Set up logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Define the token for your Telegram bot
-TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
-
 # Initialize the Updater and pass the bot's token
-updater = Updater(token=TOKEN, use_context=True)
+updater = Updater(token=BOT_TOKEN, use_context=True)
 dispatcher = updater.dispatcher
 
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Hello! I am your Telegram bot. Use /find_replace to perform find and replace.')
 
-def find_replace(update: Update, context: CallbackContext) -> None:
+def find_replace_in_message(update: Update, context: CallbackContext) -> None:
     try:
-        file_path = context.args[0]
-        find_text = context.args[1]
-        replace_text = context.args[2]
+        chat_id = update.message.chat_id
+        user_message = update.message.text
 
-        with open(file_path, 'r') as file:
-            content = file.read()
+        # Perform find and replace in the message
+        updated_message = user_message.replace("https://m.easysky.in/", "https://techy.veganab.co//")
 
-        updated_content = content.replace(find_text, replace_text)
-
-        with open(file_path, 'w') as file:
-            file.write(updated_content)
-
-        update.message.reply_text(f"Find and replace in {file_path} completed successfully.")
+        context.bot.send_message(chat_id, updated_message)
     except Exception as e:
-        update.message.reply_text(f"Error during find and replace: {str(e)}")
+        context.bot.send_message(chat_id, f"Error during find and replace: {str(e)}")
 
 # Define the command handlers
-start_handler = CommandHandler('start', start)
-find_replace_handler = CommandHandler('find_replace', find_replace)
+start_handler = MessageHandler(Filters.command & Filters.private, start)
+find_replace_handler = MessageHandler(Filters.text & Filters.private, find_replace_in_message)
 
 # Add the handlers to the dispatcher
 dispatcher.add_handler(start_handler)
