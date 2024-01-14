@@ -1,2 +1,4 @@
 # config.py
-API_KEY = "your_api_key"
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
+BOT_TOKEN = "6984238382:AAGwQWychtZSdRlnobbQLL9BIxdTidcynrU"
