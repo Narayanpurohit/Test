@@ -23,7 +23,7 @@ def find_replace(update: Update, context: CallbackContext) -> None:
         update.message.reply_text('Reply to a message to perform find and replace.')
 
 def main() -> None:
-    updater = Updater("YOUR_BOT_TOKEN")
+    updater = Updater("6984238382:AAGwQWychtZSdRlnobbQLL9BIxdTidcynrU")
 
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
