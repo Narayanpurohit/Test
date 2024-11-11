@@ -8,8 +8,8 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
 # Replace with your own Client ID and Client Secret from Google Cloud Console
-CLIENT_ID = 'YOUR_CLIENT_ID'
-CLIENT_SECRET = 'YOUR_CLIENT_SECRET'
+CLIENT_ID = '436657411418-l9efj2619nabmtrm3bhfuilc6b08gm6g.apps.googleusercontent.com'
+CLIENT_SECRET = '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'
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 # Function to authenticate the user and save the token in token.json
@@ -92,7 +92,7 @@ def reset_account(update: Update, context: CallbackContext):
     update.message.reply_text("Account reset. Use /auth to authenticate with a new account.")
 
 def main():
-    updater = Updater("YOUR_TELEGRAM_BOT_TOKEN", use_context=True)
+    updater = Updater("7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw", use_context=True)
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("auth", authenticate_user))
