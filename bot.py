@@ -1,3 +1,4 @@
+
 import os
 import json
 from google.auth.transport.requests import Request
@@ -7,9 +8,9 @@ from googleapiclient.http import MediaFileUpload
 from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-# Replace with your own Client ID and Client Secret from Google Cloud Console
-CLIENT_ID = '436657411418-l9efj2619nabmtrm3bhfuilc6b08gm6g.apps.googleusercontent.com'
-CLIENT_SECRET = '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'
+# Import configurations from config.py
+from config import TELEGRAM_BOT_TOKEN, CLIENT_ID, CLIENT_SECRET
+
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 # Function to authenticate the user and save the token in token.json
@@ -91,15 +92,25 @@ def reset_account(update: Update, context: CallbackContext):
         os.remove('token.json')
     update.message.reply_text("Account reset. Use /auth to authenticate with a new account.")
 
+# /start command to welcome the user
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("Welcome to the Google Drive Uploader Bot! Use /auth to authenticate.")
+
 def main():
-    updater = Updater("7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw", use_context=True)
+    updater = Updater(TELEGRAM_BOT_TOKEN, use_context=True)
     dp = updater.dispatcher
 
+    # Command handlers
+    dp.add_handler(CommandHandler("start", start))
     dp.add_handler(CommandHandler("auth", authenticate_user))
     dp.add_handler(CommandHandler("authcallback", auth_callback))
     dp.add_handler(CommandHandler("reset", reset_account))
 
+    # File handling
     dp.add_handler(MessageHandler(Filters.document | Filters.photo, handle_file))
+
+    # Print message to console when bot starts
+    print("Bot is up and running...")
 
     updater.start_polling()
     updater.idle()
