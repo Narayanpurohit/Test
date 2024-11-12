@@ -4,9 +4,14 @@ import random
 from pyrogram import Client, filters
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from PIL import Image
-import config
 
-app = Client("video_merger_bot", api_id=config.API_ID, api_hash="config.API_HASH", bot_token="config.BOT_TOKEN")
+
+
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
+BOT_TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
+
+app = Client("video_merger_bot", api_id=API_ID, api_hash="API_HASH", bot_token="BOT_TOKEN")
 
 USER_DATA_FILE = "user_data.json"
 
