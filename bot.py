@@ -11,7 +11,7 @@ API_ID = int("26847865")
 API_HASH = "0ef9fdd3e5f1ed49d4eb918a07b8e5d6"
 BOT_TOKEN = "6529631588:AAGWRMpC8ho7m85SZ1hUQnYEuBZcR8zt6Tw"
 
-app = Client("video_merger_bot", api_id=API_ID, api_hash="API_HASH", bot_token="BOT_TOKEN")
+app = Client("video_merger_bot", api_id=int("15191874"), api_hash="3037d39233c6fad9b80d83bb8a339a07", bot_token="7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw")
 
 USER_DATA_FILE = "user_data.json"
 
