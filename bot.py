@@ -6,7 +6,7 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips
 from PIL import Image
 import config
 
-app = Client("video_merger_bot", api_id=API_ID, api_hash="API_HASH", bot_token="BOT_TOKEN")
+app = Client("video_merger_bot", api_id=config.API_ID, api_hash="config.API_HASH", bot_token="config.BOT_TOKEN")
 
 USER_DATA_FILE = "user_data.json"
 
