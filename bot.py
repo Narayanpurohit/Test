@@ -1,97 +1,126 @@
 import os
-from telegram import Update
-from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackContext, Updater
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+import json
+import random
+from pyrogram import Client, filters
+from moviepy.editor import VideoFileClip, concatenate_videoclips
+from PIL import Image
 import config
 
-def start(update: Update, context: CallbackContext):
-    """Sends a welcome message when the bot is started."""
-    update.message.reply_text(
-        "Welcome to your personal Google Drive bot! Use /auth to authenticate your Google Drive account. "
-        "After authentication, you can send any file to upload it to your Google Drive."
+app = Client("video_merger_bot", api_id=API_ID, api_hash="API_HASH", bot_token="BOT_TOKEN")
+
+USER_DATA_FILE = "user_data.json"
+
+def load_user_data():
+    if os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_user_data(data):
+    with open(USER_DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+user_data = load_user_data()
+
+def get_user_settings(user_id):
+    if str(user_id) not in user_data:
+        user_data[str(user_id)] = {
+            "video1": None,
+            "upload_type": "video",
+            "take_screenshots": True
+        }
+        save_user_data(user_data)
+    return user_data[str(user_id)]
+
+@app.on_message(filters.command("start"))
+async def start(client, message):
+    user_id = message.from_user.id
+    get_user_settings(user_id)
+    await message.reply("Welcome! Use /config to view and change settings.")
+
+@app.on_message(filters.command("config"))
+async def show_config(client, message):
+    user_id = message.from_user.id
+    user_settings = get_user_settings(user_id)
+    config_message = (
+        f"**Your Configuration**:\n"
+        f"1. **Upload Type**: {user_settings['upload_type']} (use /set_upload_type to change)\n"
+        f"2. **Take Screenshots**: {user_settings['take_screenshots']} (use /toggle_screenshots to change)\n"
+        f"3. **Intro Video**: {'Set' if user_settings['video1'] else 'Not Set'} (use /set_intro to change)\n"
     )
-    print("Bot started and ready to receive commands.")
+    await message.reply(config_message)
 
-def authenticate_user(update: Update, context: CallbackContext):
-    """Starts the Google authentication flow."""
-    flow = Flow.from_client_config(
-        {
-            "installed": {
-                "client_id": config.CLIENT_ID,
-                "client_secret": config.CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-            }
-        },
-        scopes=['https://www.googleapis.com/auth/drive.file']
-    )
+@app.on_message(filters.command("set_upload_type"))
+async def set_upload_type(client, message):
+    user_id = message.from_user.id
+    user_settings = get_user_settings(user_id)
+    new_type = "document" if user_settings["upload_type"] == "video" else "video"
+    user_settings["upload_type"] = new_type
+    save_user_data(user_data)
+    await message.reply(f"Upload type set to {new_type}.")
 
-    # Set the redirect URI explicitly for desktop app
-    flow.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
+@app.on_message(filters.command("toggle_screenshots"))
+async def toggle_screenshots(client, message):
+    user_id = message.from_user.id
+    user_settings = get_user_settings(user_id)
+    user_settings["take_screenshots"] = not user_settings["take_screenshots"]
+    save_user_data(user_data)
+    status = "enabled" if user_settings["take_screenshots"] else "disabled"
+    await message.reply(f"Screenshots have been {status}.")
 
-    # Generate the authorization URL
-    auth_url, _ = flow.authorization_url(prompt='consent')
-    context.user_data['flow'] = flow
-    update.message.reply_text("Please visit the following link to authenticate:\n" + auth_url)
-
-def handle_auth_code(update: Update, context: CallbackContext):
-    """Handles the authorization code provided by the user and completes the Google authentication."""
-    auth_code = update.message.text
-    flow = context.user_data.get('flow')
-
-    if not flow:
-        update.message.reply_text("Please use /auth to start the authentication process.")
+@app.on_message(filters.command("set_intro"))
+async def set_video1(client, message):
+    user_id = message.from_user.id
+    if not message.video:
+        await message.reply("Please send a video to set as Video1.")
         return
 
-    # Exchange the authorization code for credentials
-    flow.fetch_token(code=auth_code)
-    credentials = flow.credentials
-    context.user_data['credentials'] = credentials
+    file = await message.video.download(f"{user_id}_video1.mp4")
+    user_data[str(user_id)]["video1"] = file
+    save_user_data(user_data)
+    await message.reply("Intro video saved as Video1!")
 
-    update.message.reply_text("Authentication successful! You can now upload files.")
+@app.on_message(filters.video)
+async def merge_videos_and_screenshots(client, message):
+    user_id = message.from_user.id
+    user_settings = get_user_settings(user_id)
 
-def upload_file(update: Update, context: CallbackContext):
-    """Uploads the received file to Google Drive."""
-    credentials = context.user_data.get('credentials')
-
-    if not credentials:
-        update.message.reply_text("Please authenticate first using /auth.")
+    video1_path = user_settings["video1"]
+    if not video1_path:
+        await message.reply("Set an intro video with /set_intro first.")
         return
 
-    # Download the file sent by the user
-    file = update.message.document.get_file()
-    file_path = file.download()
+    video2_path = await message.video.download(f"{user_id}_video2.mp4")
+    video1_clip = VideoFileClip(video1_path)
+    video2_clip = VideoFileClip(video2_path)
+    final_clip = concatenate_videoclips([video1_clip, video2_clip])
+    final_video_path = f"{user_id}_merged_video.mp4"
+    final_clip.write_videofile(final_video_path)
 
-    # Initialize Google Drive API client
-    drive_service = build('drive', 'v3', credentials=credentials)
+    screenshots = []
+    if user_settings["take_screenshots"]:
+        for _ in range(8):
+            random_time = random.uniform(0, video2_clip.duration)
+            frame = video2_clip.get_frame(random_time)
+            screenshot_path = f"{user_id}_screenshot_{int(random_time)}.jpg"
+            Image.fromarray(frame).save(screenshot_path)
+            screenshots.append(screenshot_path)
 
-    # Upload the file to Google Drive
-    file_metadata = {'name': update.message.document.file_name}
-    media = MediaFileUpload(file_path, mimetype=update.message.document.mime_type)
-    drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+    if user_settings["upload_type"] == "video":
+        await message.reply_video(video=final_video_path)
+    else:
+        await message.reply_document(document=final_video_path)
 
-    # Confirm the file upload
-    update.message.reply_text(f"File '{update.message.document.file_name}' has been uploaded to Google Drive.")
+    if user_settings["take_screenshots"]:
+        for screenshot in screenshots:
+            await message.reply_photo(photo=screenshot)
 
-    # Clean up the downloaded file
-    os.remove(file_path)
+    video1_clip.close()
+    video2_clip.close()
+    final_clip.close()
+    os.remove(video2_path)
+    os.remove(final_video_path)
+    for screenshot in screenshots:
+        os.remove(screenshot)
 
-def main():
-    """Main function to start the bot and add all handlers."""
-    updater = Updater(config.BOT_TOKEN)
-    dp = updater.dispatcher
-
-    # Add handlers
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("auth", authenticate_user))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_auth_code))  # To handle the auth code
-    dp.add_handler(MessageHandler(Filters.document, upload_file))  # To handle file uploads
-
-    # Start polling and keep the bot running
-    updater.start_polling()
-    updater.idle()
-
-if __name__ == '__main__':
-    main()
+app.run()
