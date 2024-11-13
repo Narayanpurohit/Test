@@ -1,4 +1,3 @@
-
 from pyrogram import Client, filters
 from pyrogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
 import json
@@ -57,10 +56,23 @@ async def set_intro_video(client, message: Message):
     else:
         await message.reply("Please reply to the video or document you want to set as the intro.")
 
-# Helper function to validate video file types
+# Set words to remove from filename handler
+@app.on_message(filters.command("set_remove_words"))
+async def set_remove_words(client, message: Message):
+    user_id = str(message.from_user.id)
+    words_to_remove = message.text.split(" ", 1)[1] if " " in message.text else ""
+    
+    if words_to_remove:
+        user_data.setdefault(user_id, {})["remove_words"] = words_to_remove.split(',')
+        save_user_data()
+        await message.reply(f"Words set to be removed from final filename: {words_to_remove}")
+    else:
+        await message.reply("Please specify words to remove, separated by commas (e.g., @hub_linkz,@cinemafilx)")
+
+# Helper function to validate video file types (case-insensitive)
 def is_supported_video(filename):
     supported_extensions = [".mp4", ".mov", ".avi", ".mkv"]
-    return any(filename.endswith(ext) for ext in supported_extensions)
+    return any(filename.lower().endswith(ext) for ext in supported_extensions)
 
 # Merge videos and generate screenshots handler
 @app.on_message(filters.video | filters.document)
@@ -85,9 +97,19 @@ async def merge_videos(client, message: Message):
     video1_clip = VideoFileClip(video1_file)
     video2_clip = VideoFileClip(video2_file)
 
+    # Determine filename for the final video
+    final_filename = file_message.file_name
+    
+    # Remove specified words from the final filename
+    words_to_remove = user_data.get(user_id, {}).get("remove_words", [])
+    for word in words_to_remove:
+        final_filename = final_filename.replace(word, "")
+    
+    final_filename = final_filename.strip()  # Remove any extra spaces from the filename
+    output_path = os.path.join(f"{user_id}_{final_filename}")
+
     # Concatenate videos
-    final_clip = video1_clip.concatenate_videoclips([video1_clip, video2_clip])
-    output_path = f"{user_id}_merged_video.mp4"
+    final_clip = VideoFileClip.concatenate_videoclips([video1_clip, video2_clip])
     final_clip.write_videofile(output_path, codec="libx264")
 
     # Generate screenshots
@@ -102,15 +124,16 @@ async def merge_videos(client, message: Message):
 
     # Determine upload type
     upload_type = user_data.get(user_id, {}).get("upload_type", "video")
-
-    # Send merged video and screenshots to the user
+    
+    # Send merged video
     if upload_type == "video":
-        await client.send_video(message.chat.id, video=output_path)
+        await message.reply_video(output_path)
     else:
-        await client.send_document(message.chat.id, document=output_path)
-
+        await message.reply_document(output_path)
+    
+    # Send screenshots
     for screenshot in screenshots:
-        await client.send_photo(message.chat.id, photo=screenshot)
+        await message.reply_photo(screenshot)
 
     # Clean up
     os.remove(video2_file)
@@ -118,10 +141,18 @@ async def merge_videos(client, message: Message):
     for screenshot in screenshots:
         os.remove(screenshot)
 
-# Start command to print a welcome message
-@app.on_message(filters.command("start"))
-async def start(client, message: Message):
-    await message.reply("Welcome to the Video Merger Bot! Use /set_intro to set an intro video and then send a video to merge.")
+# Help command handler
+@app.on_message(filters.command("help"))
+async def help_command(client, message: Message):
+    help_text = (
+        "/set_intro - Set the intro video (use this command in reply to a video).\n"
+        "/set_video - Set the default upload type to video.\n"
+        "/set_document - Set the default upload type to document.\n"
+        "/set_remove_words - Set words to remove from filename (comma-separated).\n"
+        "/cancel - Cancel the current operation.\n"
+        "/help - Show this help message."
+    )
+    await message.reply(help_text)
 
-if __name__ == "__main__":
-    app.run()
+# Run the bot
+app.run()
