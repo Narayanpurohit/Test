@@ -1,6 +1,5 @@
 
 # Load configuration
-from config import API_ID, API_HASH, BOT_TOKEN, USER_DATA_FILE
 
 
 import os
@@ -9,10 +8,9 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from PIL import Image
+from config import API_ID, API_HASH, BOT_TOKEN, USER_DATA_FILE
 
-API_ID = "YOUR_API_ID"
-API_HASH = "YOUR_API_HASH"
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+
 
 # Initialize bot
 app = Client("video_merger_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
