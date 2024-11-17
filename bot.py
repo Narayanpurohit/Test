@@ -7,9 +7,9 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
 
 # Replace with your actual bot token and credentials
-API_ID = "9219444"  # Get this from my.telegram.org
-API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # Get this from my.telegram.org
-TOKEN = "7646833477:AAF_K4lzjzZmaB9LZzRLPfA0Hhr3SfSWOak"  # Replace with your bot's token
+API_ID = "15191874"  # Get this from my.telegram.org
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"  # Get this from my.telegram.org
+TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"  # Replace with your bot's token
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
@@ -28,9 +28,9 @@ def save_user_settings():
         json.dump(user_settings, f)
 
 # Default settings
-DEFAULT_TEXT = "@kaidamaal"
+DEFAULT_TEXT = "jn-bots.in"
 DEFAULT_POSITION = "bottom-right"
-DEFAULT_SNAPSHOTS = 12
+DEFAULT_SNAPSHOTS = 8
 
 # Function to add a watermark to a video (without audio)
 def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
