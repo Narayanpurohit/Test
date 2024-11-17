@@ -17,7 +17,7 @@ TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"  # Replace with your bo
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 # Connect to MongoDB (replace with your MongoDB URI if using a hosted service like Atlas)
-client = MongoClient("mongodb://localhost:27017/")
+client = MongoClient("mongodb+srv://1by1themes:3snVjsLPmZ9xcbd3@cluster0.uaazt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client["watermark_bot_db"]
 users_collection = db["users"]
 
