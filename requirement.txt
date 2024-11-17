@@ -1,3 +1,4 @@
-pyrogram==2.0.106
-opencv-python-headless==4.8.0.76
+pyrogram==2.0.62
+pymongo==3.12.3
+opencv-python==4.7.0.72
 ffmpeg-python==0.2.0
