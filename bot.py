@@ -1,10 +1,12 @@
 import os
 import cv2
-import json
 import time
 import subprocess
+import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
+from pymongo import MongoClient
+from pyrogram.errors import FloodWait
 
 # Replace with your actual bot token and credentials
 API_ID = "15191874"  # Get this from my.telegram.org
@@ -14,27 +16,57 @@ TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"  # Replace with your bo
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-# Load user settings from file
-user_settings = {}
-def load_user_settings():
-    global user_settings
-    if os.path.exists("user_settings.json"):
-        with open("user_settings.json", "r") as f:
-            user_settings = json.load(f)
-
-# Save user settings to file
-def save_user_settings():
-    with open("user_settings.json", "w") as f:
-        json.dump(user_settings, f)
+# Connect to MongoDB (replace with your MongoDB URI if using a hosted service like Atlas)
+client = MongoClient("mongodb://localhost:27017/")
+db = client["watermark_bot_db"]
+users_collection = db["users"]
 
 # Default settings
 DEFAULT_TEXT = "jn-bots.in"
 DEFAULT_POSITION = "bottom-right"
 DEFAULT_SNAPSHOTS = 8
+DEFAULT_FONT = "𝒜𝐵𝒞𝒟𝐸𝐹𝒢𝐻𝐼𝒥𝒦𝒻"
+DEFAULT_SIZE = "medium"  # Options: small, medium, large
+
+# Define sizes based on small, medium, large
+FONT_SIZES = {
+    "small": 0.5,
+    "medium": 1,
+    "large": 2
+}
+
+# List of available fonts (add more if needed)
+FONTS = {
+    "𝒜𝐵𝒞𝒟𝐸𝐹𝒢𝐻𝐼𝒥𝒦𝒻": "Font1",
+    "𝔸𝔹ℂ𝔻𝔼ℱℂℍ𝕀𝕁K": "Font2",
+}
+
+# Set up logging to log each function execution
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger()
+
+# Function to get user settings from MongoDB (if exists)
+def get_user_settings(user_id):
+    user_data = users_collection.find_one({"user_id": user_id})
+    if user_data:
+        logger.info(f"Retrieved user settings for {user_id}")
+        return user_data
+    logger.info(f"No settings found for {user_id}, using defaults.")
+    return {}
+
+# Function to update user settings in MongoDB
+def update_user_settings(user_id, settings):
+    users_collection.update_one(
+        {"user_id": user_id},
+        {"$set": settings},
+        upsert=True
+    )
+    logger.info(f"Updated settings for {user_id}: {settings}")
 
 # Function to add a watermark to a video (without audio)
-def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
-                  movement="moving", speed=2, direction="horizontal", loop=True, progress_callback=None):
+def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None, font=DEFAULT_FONT,
+                  size=DEFAULT_SIZE, movement="moving", speed=2, direction="horizontal", loop=True, progress_callback=None):
+    logger.info(f"Starting watermarking process for video: {video_path} with watermark text: {text}")
     video = cv2.VideoCapture(video_path)
     fps = video.get(cv2.CAP_PROP_FPS)
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -46,17 +78,14 @@ def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
     temp_video_path = "temp_video_no_audio.mp4"
     out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
 
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
-    font_thickness = 2
-    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+    font_scale = FONT_SIZES.get(size, 1)
+    text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, font_scale, 2)[0]
 
     # Set initial position for moving watermark
     if movement == "moving":
         x, y = 0, height // 2  # Start from the left middle
         dx, dy = (speed, 0) if direction == "horizontal" else (0, speed)
     else:
-        # Default static position (if user defines static watermark)
         x, y = {
             "top-left": (10, 30),
             "top-right": (width - text_size[0] - 10, 30),
@@ -78,8 +107,8 @@ def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
             x = (x + dx) % (width - text_size[0]) if loop else min(x + dx, width - text_size[0])
 
         # Add watermark with red outline
-        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
-        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), 1, cv2.LINE_AA)
         out.write(frame)
         frame_count += 1
 
@@ -100,9 +129,11 @@ def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
 
     # Clean up temporary file
     os.remove(temp_video_path)
+    logger.info(f"Watermarking process completed. Output saved to {output_path}")
 
 # Function to capture snapshots
 def capture_snapshots(video_path, snapshot_count=DEFAULT_SNAPSHOTS):
+    logger.info(f"Capturing {snapshot_count} snapshots from video: {video_path}")
     snapshots = []
     video = cv2.VideoCapture(video_path)
     total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -117,18 +148,17 @@ def capture_snapshots(video_path, snapshot_count=DEFAULT_SNAPSHOTS):
             snapshots.append(snapshot_path)
 
     video.release()
+    logger.info(f"Captured {len(snapshots)} snapshots")
     return snapshots
 
-# Function to generate a thumbnail from the video
-def generate_thumbnail(video_path):
-    video = cv2.VideoCapture(video_path)
-    video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Set to the first frame
-    ret, frame = video.read()
-    thumbnail_path = "thumbnail.jpg"
-    if ret:
-        cv2.imwrite(thumbnail_path, frame)
-    video.release()
-    return thumbnail_path if ret else None
+# Function to display download progress bar
+def progress_bar(current, total, prefix='', length=40):
+    percent = ("{0:.1f}").format(100 * (current / float(total)))
+    filled_length = int(length * current // total)
+    bar = '█' * filled_length + '-' * (length - filled_length)
+    print(f'\r{prefix} |{bar}| {percent}% Complete', end="\r")
+    if current == total:
+        print()  # New line when complete
 
 # Command to start the bot
 @app.on_message(filters.command("start"))
@@ -136,126 +166,64 @@ async def start(client, message: Message):
     await message.reply_text(
         "👋 WELCOME to the Watermark Bot!\n\n"
         "Send me a video, and I'll add a watermark to it. You can also configure settings for snapshots, "
-        "watermark movement, and more.\n\n"
+        "watermark movement, font style, and size.\n\n"
         "Use /help to see all available commands."
     )
+    logger.info(f"User {message.from_user.id} started the bot.")
 
 # Command to display help
 @app.on_message(filters.command("help"))
 async def help(client, message: Message):
     await message.reply_text(
         "📜 HELP MENU 📜\n\n"
-        "Use the following commands to control the bot:\n\n"
-        "/set_watermark <text> - Set custom watermark text.\n"
-        "/position <top-left | top-right | bottom-left | bottom-right | center> - Set watermark position.\n"
-        "/movement <static | moving> - Set watermark type.\n"
-        "/speed <1-10> - Set speed for moving watermark.\n"
-        "/direction <horizontal | vertical> - Set direction for moving watermark.\n"
-        "/loop <yes | no> - Set if moving watermark loops back.\n"
-        "/snapshots <number> - Set the number of snapshots.\n"
-        "/snap - Take snapshots from video.\n"
-        "/clear - Clear all media files.\n\n"
-        "💡 Send a video to start adding watermarks and snapshots!"
+        "Use the following commands to control the bot:\n"
+        "/set_watermark <text> - Set the watermark text.\n"
+        "/font <font_name> - Set the watermark font (e.g., Font1, Font2).\n"
+        "/size <small|medium|large> - Set watermark font size.\n"
+        "/snapshots <number> - Set number of snapshots to capture.\n"
+        "/start - Start using the bot.\n"
     )
+    logger.info(f"User {message.from_user.id} requested help.")
 
-from pyrogram.types import InputMediaPhoto
-
-# Command to take snapshots
-@app.on_message(filters.command("snap"))
-async def snap(client, message: Message):
-    # Ensure the command is used in reply to a video message
-    if not message.reply_to_message or not message.reply_to_message.video:
-        await message.reply_text("⚠️ Please reply to a video message to take snapshots.")
-        return
-
-    user_id = message.from_user.id
-    snapshot_count = user_settings.get(user_id, {}).get("snapshots", DEFAULT_SNAPSHOTS)
-
-    # Download the video from the replied message
-    video = await message.reply_to_message.download()
-    
-    # Capture snapshots
-    snapshots = capture_snapshots(video, snapshot_count)
-
-    # Send snapshots in groups of 10
-    MAX_MEDIA_GROUP_SIZE = 10
-    for i in range(0, len(snapshots), MAX_MEDIA_GROUP_SIZE):
-        media_group = [InputMediaPhoto(photo) for photo in snapshots[i:i + MAX_MEDIA_GROUP_SIZE]]
-        await message.reply_media_group(media_group)
-
-    # Clean up snapshots
-    for snapshot in snapshots:
-        os.remove(snapshot)
-# Command to set custom watermark text
+# Command to set watermark text
 @app.on_message(filters.command("set_watermark"))
 async def set_watermark(client, message: Message):
-    # Ensure that the user provided text after the command
     if len(message.text.split()) < 2:
-        await message.reply_text("⚠️ Please provide the watermark text after the command. Example: `/set_watermark YourText`.")
+        await message.reply_text("⚠️ Please provide the watermark text (e.g., `/set_watermark MyText`).")
         return
-
-    # Extract the watermark text from the command message
     watermark_text = " ".join(message.text.split()[1:])
-    
     user_id = message.from_user.id
-    # Update user settings with the new watermark text
-    if user_id not in user_settings:
-        user_settings[user_id] = {}
+    update_user_settings(user_id, {"watermark_text": watermark_text})
+    await message.reply_text(f"✅ Watermark text has been set to: {watermark_text}")
 
-    user_settings[user_id]['watermark_text'] = watermark_text
-    save_user_settings()
-
-    # Confirm the change to the user
-    await message.reply_text(f"✅ Your watermark text has been updated to: {watermark_text}")
-# Handle video messages with progress updates
-@app.on_message(filters.video | filters.document)
-async def handle_video(client, message: Message):
+# Command to set watermark font
+@app.on_message(filters.command("font"))
+async def set_font(client, message: Message):
+    if len(message.text.split()) < 2:
+        await message.reply_text("⚠️ Please provide the font name (e.g., `/font Font1`).")
+        return
+    font_name = message.text.split()[1]
+    if font_name not in FONTS:
+        await message.reply_text(f"⚠️ Invalid font. Available options are: {', '.join(FONTS.keys())}")
+        return
     user_id = message.from_user.id
-    user_data = user_settings.get(user_id, {})
-    text = user_data.get('watermark_text', DEFAULT_TEXT)
-    position = user_data.get('position', DEFAULT_POSITION)
-    movement = user_data.get('movement', 'static')
-    speed = user_data.get('speed', 1)
-    direction = user_data.get('direction', 'horizontal')
-    loop = user_data.get('loop', False)
+    update_user_settings(user_id, {"font": font_name})
+    await message.reply_text(f"✅ Font has been set to: {font_name}")
 
-    progress_message = await message.reply_text("Starting video processing...")
+# Command to set watermark size
+@app.on_message(filters.command("size"))
+async def set_size(client, message: Message):
+    if len(message.text.split()) < 2:
+        await message.reply_text("⚠️ Please provide the size (e.g., `/size medium`).")
+        return
+    size = message.text.split()[1]
+    if size not in FONT_SIZES:
+        await message.reply_text(f"⚠️ Invalid size. Available options are: {', '.join(FONT_SIZES.keys())}")
+        return
+    user_id = message.from_user.id
+    update_user_settings(user_id, {"size": size})
+    await message.reply_text(f"✅ Size has been set to: {size}")
 
-    def progress_callback(current, total):
-        progress = int(20 * current / total)
-        bar = "🟩" * progress + "⬜️" * (20 - progress)
-        client.loop.create_task(progress_message.edit_text(
-            f"[{bar}] {current / total * 100:.2f}%\nFrames processed: {current}/{total}"
-        ))
-
-    # Download and process the video
-    video = await message.download()
-    output_path = f"{video}.watermarked.mp4"
-    
-    # Generate a thumbnail for the video
-    thumbnail_path = generate_thumbnail(video)
-
-    # Start watermarking with progress updates
-    add_watermark(video, output_path, text, position, movement, speed, direction, loop, progress_callback)
-
-    # Final update after processing
-    await progress_message.edit_text("[🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100.00%\nProcessing complete!")
-
-    # Send the processed video with thumbnail if available
-    if thumbnail_path and os.path.exists(thumbnail_path):
-        await message.reply_video(output_path, thumb=thumbnail_path, supports_streaming=True)
-    else:
-        await message.reply_video(output_path, supports_streaming=True)
-
-    # Clean up files
-    os.remove(video)
-    os.remove(output_path)
-    if thumbnail_path and os.path.exists(thumbnail_path):
-        os.remove(thumbnail_path)
-
-# Load user settings on start
-load_user_settings()
-
+# Main method to run the bot
 if __name__ == "__main__":
     app.run()
-
