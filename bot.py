@@ -186,7 +186,27 @@ async def snap(client, message: Message):
     # Clean up snapshots
     for snapshot in snapshots:
         os.remove(snapshot)
+# Command to set custom watermark text
+@app.on_message(filters.command("set_watermark"))
+async def set_watermark(client, message: Message):
+    # Ensure that the user provided text after the command
+    if len(message.text.split()) < 2:
+        await message.reply_text("⚠️ Please provide the watermark text after the command. Example: `/set_watermark YourText`.")
+        return
 
+    # Extract the watermark text from the command message
+    watermark_text = " ".join(message.text.split()[1:])
+    
+    user_id = message.from_user.id
+    # Update user settings with the new watermark text
+    if user_id not in user_settings:
+        user_settings[user_id] = {}
+
+    user_settings[user_id]['watermark_text'] = watermark_text
+    save_user_settings()
+
+    # Confirm the change to the user
+    await message.reply_text(f"✅ Your watermark text has been updated to: {watermark_text}")
 # Handle video messages with progress updates
 @app.on_message(filters.video | filters.document)
 async def handle_video(client, message: Message):
