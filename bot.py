@@ -188,7 +188,7 @@ async def snap(client, message: Message):
         os.remove(snapshot)
 
 # Handle video messages with progress updates
-@app.on_message(filters.video)
+@app.on_message(filters.video | filters.document)
 async def handle_video(client, message: Message):
     user_id = message.from_user.id
     user_data = user_settings.get(user_id, {})
