@@ -1,146 +1,241 @@
-
-# Load configuration
-
-
 import os
-import random
+import cv2
+import json
+import time
+import subprocess
 from pyrogram import Client, filters
-from pyrogram.types import Message
-from moviepy.editor import VideoFileClip, concatenate_videoclips
-from PIL import Image
-from config import API_ID, API_HASH, BOT_TOKEN, USER_DATA_FILE
+from pyrogram.types import Message, InputMediaPhoto
 
+# Replace with your actual bot token and credentials
+API_ID = "9219444"  # Get this from my.telegram.org
+API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # Get this from my.telegram.org
+TOKEN = "7646833477:AAF_K4lzjzZmaB9LZzRLPfA0Hhr3SfSWOak"  # Replace with your bot's token
 
+# Initialize the Pyrogram Client
+app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-# Initialize bot
-app = Client("video_merger_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+# Load user settings from file
+user_settings = {}
+def load_user_settings():
+    global user_settings
+    if os.path.exists("user_settings.json"):
+        with open("user_settings.json", "r") as f:
+            user_settings = json.load(f)
 
-# Dictionary to store user configurations
-user_data = {}
+# Save user settings to file
+def save_user_settings():
+    with open("user_settings.json", "w") as f:
+        json.dump(user_settings, f)
 
-# Helper functions
-def is_supported_video(filename):
-    return filename.lower().endswith((".mp4", ".mov", ".avi", ".mkv"))
+# Default settings
+DEFAULT_TEXT = "@kaidamaal"
+DEFAULT_POSITION = "bottom-right"
+DEFAULT_SNAPSHOTS = 12
 
-# Command to set intro video
-@app.on_message(filters.command("set_intro") & filters.reply)
-async def set_intro(client, message: Message):
-    if message.reply_to_message.video or message.reply_to_message.document:
-        file_message = message.reply_to_message.video or message.reply_to_message.document
-        if is_supported_video(file_message.file_name):
-            intro_path = await client.download_media(file_message)
-            user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-            user_data[message.from_user.id]["video1"] = intro_path
-            await message.reply("Intro video has been set!")
-        else:
-            await message.reply("Please reply to a valid video file.")
+# Function to add a watermark to a video (without audio)
+def add_watermark(video_path, output_path, text=DEFAULT_TEXT, position=None,
+                  movement="moving", speed=2, direction="horizontal", loop=True, progress_callback=None):
+    video = cv2.VideoCapture(video_path)
+    fps = video.get(cv2.CAP_PROP_FPS)
+    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    # OpenCV VideoWriter for processing frames without audio
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    temp_video_path = "temp_video_no_audio.mp4"
+    out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1
+    font_thickness = 2
+    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
+
+    # Set initial position for moving watermark
+    if movement == "moving":
+        x, y = 0, height // 2  # Start from the left middle
+        dx, dy = (speed, 0) if direction == "horizontal" else (0, speed)
     else:
-        await message.reply("Please reply to a video file to set as intro.")
-
-# Command to set upload type
-@app.on_message(filters.command("set_video"))
-async def set_upload_video(client, message: Message):
-    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["upload_type"] = "video"
-    await message.reply("Default upload type set to video.")
-
-@app.on_message(filters.command("set_document"))
-async def set_upload_document(client, message: Message):
-    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["upload_type"] = "document"
-    await message.reply("Default upload type set to document.")
-
-# Command to set words to remove from file name
-@app.on_message(filters.command("set_remove_words"))
-async def set_remove_words(client, message: Message):
-    words = message.text.split(maxsplit=1)[1].split(",")
-    user_data[message.from_user.id] = user_data.get(message.from_user.id, {})
-    user_data[message.from_user.id]["remove_words"] = [word.strip() for word in words]
-    await message.reply("Words to remove from filename have been set.")
-
-# Command to merge videos and generate screenshots
-@app.on_message(filters.video | filters.document)
-async def merge_videos(client, message: Message):
-    user_id = str(message.from_user.id)
+        # Default static position (if user defines static watermark)
+        x, y = {
+            "top-left": (10, 30),
+            "top-right": (width - text_size[0] - 10, 30),
+            "bottom-left": (10, height - 20),
+            "bottom-right": (width - text_size[0] - 10, height - 20),
+            "center": ((width - text_size[0]) // 2, height // 2)
+        }.get(position, (10, 30))  # Default to top-left if no position specified
     
-    # Check if an intro video exists
-    if user_id not in user_data or "video1" not in user_data[user_id]:
-        await message.reply("You need to set an intro video first using /set_intro.")
-        return
-    
-    # Download the main video (video2)
-    file_message = message.video or message.document
-    if file_message and is_supported_video(file_message.file_name):
-        video2_file = await client.download_media(file_message)
-    else:
-        await message.reply("Please send a valid video file format (e.g., .mp4, .mov, .avi, .mkv).")
-        return
+    frame_count = 0
+    last_update_time = time.time()
 
-    # Load the intro video (video1)
-    video1_file = user_data[user_id]["video1"]
-    video1_clip = VideoFileClip(video1_file)
-    video2_clip = VideoFileClip(video2_file)
+    while True:
+        ret, frame = video.read()
+        if not ret:
+            break
 
-    # Determine filename for the final video
-    final_filename = file_message.file_name
-    
-    # Remove specified words from the final filename
-    words_to_remove = user_data.get(user_id, {}).get("remove_words", [])
-    for word in words_to_remove:
-        final_filename = final_filename.replace(word, "")
-    
-    final_filename = final_filename.strip()  # Remove any extra spaces from the filename
-    output_path = os.path.join(f"{user_id}_{final_filename}")
+        # Update watermark position for movement if applicable
+        if movement == "moving":
+            x = (x + dx) % (width - text_size[0]) if loop else min(x + dx, width - text_size[0])
 
-    # Concatenate videos
-    final_clip = concatenate_videoclips([video1_clip, video2_clip])
-    final_clip.write_videofile(output_path, codec="libx264")
+        # Add watermark with red outline
+        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
+        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        out.write(frame)
+        frame_count += 1
 
-    # Generate screenshots
-    screenshots = []
-    for _ in range(8):
-        random_time = random.uniform(0, video2_clip.duration)
-        frame = video2_clip.get_frame(random_time)
-        image = Image.fromarray(frame)
-        screenshot_path = f"{user_id}_screenshot_{int(random_time)}.jpg"
-        image.save(screenshot_path)
-        screenshots.append(screenshot_path)
+        # Update progress at intervals
+        if progress_callback and time.time() - last_update_time > 1:
+            progress_callback(frame_count, total_frames)
+            last_update_time = time.time()
 
-    # Determine upload type
-    upload_type = user_data.get(user_id, {}).get("upload_type", "video")
-    
-    # Send merged video
-    if upload_type == "video":
-        await message.reply_video(output_path)
-    else:
-        await message.reply_document(output_path)
-    
-    # Send screenshots
-    for screenshot in screenshots:
-        await message.reply_photo(screenshot)
+    video.release()
+    out.release()
 
-    # Clean up
-    os.remove(video2_file)
-    os.remove(output_path)
-    for screenshot in screenshots:
-        os.remove(screenshot)
+    # Combine the processed video with original audio using ffmpeg
+    command = [
+        "ffmpeg", "-y", "-i", temp_video_path, "-i", video_path, "-c:v", "copy", "-c:a", "aac",
+        "-map", "0:v:0", "-map", "1:a:0", output_path
+    ]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-# Help command
-@app.on_message(filters.command("help"))
-async def help_command(client, message: Message):
-    help_text = """
-/set_intro - Set the intro video by replying to a video file.
-/set_video - Set the upload type to video.
-/set_document - Set the upload type to document.
-/set_remove_words - Set words to remove from filenames (comma-separated).
-To merge videos, send a video file after setting your intro.
-"""
-    await message.reply(help_text)
+    # Clean up temporary file
+    os.remove(temp_video_path)
 
-# Start command
+# Function to capture snapshots
+def capture_snapshots(video_path, snapshot_count=DEFAULT_SNAPSHOTS):
+    snapshots = []
+    video = cv2.VideoCapture(video_path)
+    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    step = total_frames // snapshot_count
+
+    for i in range(snapshot_count):
+        video.set(cv2.CAP_PROP_POS_FRAMES, i * step)
+        ret, frame = video.read()
+        if ret:
+            snapshot_path = f"snapshot_{i}.jpg"
+            cv2.imwrite(snapshot_path, frame)
+            snapshots.append(snapshot_path)
+
+    video.release()
+    return snapshots
+
+# Function to generate a thumbnail from the video
+def generate_thumbnail(video_path):
+    video = cv2.VideoCapture(video_path)
+    video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Set to the first frame
+    ret, frame = video.read()
+    thumbnail_path = "thumbnail.jpg"
+    if ret:
+        cv2.imwrite(thumbnail_path, frame)
+    video.release()
+    return thumbnail_path if ret else None
+
+# Command to start the bot
 @app.on_message(filters.command("start"))
-async def start_command(client, message: Message):
-    await message.reply("Welcome! Use /help to see available commands.")
+async def start(client, message: Message):
+    await message.reply_text(
+        "👋 WELCOME to the Watermark Bot!\n\n"
+        "Send me a video, and I'll add a watermark to it. You can also configure settings for snapshots, "
+        "watermark movement, and more.\n\n"
+        "Use /help to see all available commands."
+    )
+
+# Command to display help
+@app.on_message(filters.command("help"))
+async def help(client, message: Message):
+    await message.reply_text(
+        "📜 HELP MENU 📜\n\n"
+        "Use the following commands to control the bot:\n\n"
+        "/set_watermark <text> - Set custom watermark text.\n"
+        "/position <top-left | top-right | bottom-left | bottom-right | center> - Set watermark position.\n"
+        "/movement <static | moving> - Set watermark type.\n"
+        "/speed <1-10> - Set speed for moving watermark.\n"
+        "/direction <horizontal | vertical> - Set direction for moving watermark.\n"
+        "/loop <yes | no> - Set if moving watermark loops back.\n"
+        "/snapshots <number> - Set the number of snapshots.\n"
+        "/snap - Take snapshots from video.\n"
+        "/clear - Clear all media files.\n\n"
+        "💡 Send a video to start adding watermarks and snapshots!"
+    )
+
+from pyrogram.types import InputMediaPhoto
+
+# Command to take snapshots
+@app.on_message(filters.command("snap"))
+async def snap(client, message: Message):
+    # Ensure the command is used in reply to a video message
+    if not message.reply_to_message or not message.reply_to_message.video:
+        await message.reply_text("⚠️ Please reply to a video message to take snapshots.")
+        return
+
+    user_id = message.from_user.id
+    snapshot_count = user_settings.get(user_id, {}).get("snapshots", DEFAULT_SNAPSHOTS)
+
+    # Download the video from the replied message
+    video = await message.reply_to_message.download()
+    
+    # Capture snapshots
+    snapshots = capture_snapshots(video, snapshot_count)
+
+    # Send snapshots in groups of 10
+    MAX_MEDIA_GROUP_SIZE = 10
+    for i in range(0, len(snapshots), MAX_MEDIA_GROUP_SIZE):
+        media_group = [InputMediaPhoto(photo) for photo in snapshots[i:i + MAX_MEDIA_GROUP_SIZE]]
+        await message.reply_media_group(media_group)
+
+    # Clean up snapshots
+    for snapshot in snapshots:
+        os.remove(snapshot)
+
+# Handle video messages with progress updates
+@app.on_message(filters.video)
+async def handle_video(client, message: Message):
+    user_id = message.from_user.id
+    user_data = user_settings.get(user_id, {})
+    text = user_data.get('watermark_text', DEFAULT_TEXT)
+    position = user_data.get('position', DEFAULT_POSITION)
+    movement = user_data.get('movement', 'static')
+    speed = user_data.get('speed', 1)
+    direction = user_data.get('direction', 'horizontal')
+    loop = user_data.get('loop', False)
+
+    progress_message = await message.reply_text("Starting video processing...")
+
+    def progress_callback(current, total):
+        progress = int(20 * current / total)
+        bar = "🟩" * progress + "⬜️" * (20 - progress)
+        client.loop.create_task(progress_message.edit_text(
+            f"[{bar}] {current / total * 100:.2f}%\nFrames processed: {current}/{total}"
+        ))
+
+    # Download and process the video
+    video = await message.download()
+    output_path = f"{video}.watermarked.mp4"
+    
+    # Generate a thumbnail for the video
+    thumbnail_path = generate_thumbnail(video)
+
+    # Start watermarking with progress updates
+    add_watermark(video, output_path, text, position, movement, speed, direction, loop, progress_callback)
+
+    # Final update after processing
+    await progress_message.edit_text("[🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100.00%\nProcessing complete!")
+
+    # Send the processed video with thumbnail if available
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        await message.reply_video(output_path, thumb=thumbnail_path, supports_streaming=True)
+    else:
+        await message.reply_video(output_path, supports_streaming=True)
+
+    # Clean up files
+    os.remove(video)
+    os.remove(output_path)
+    if thumbnail_path and os.path.exists(thumbnail_path):
+        os.remove(thumbnail_path)
+
+# Load user settings on start
+load_user_settings()
 
 if __name__ == "__main__":
     app.run()
+
