@@ -1,8 +1,6 @@
 import os
 import cv2
-import json
 import time
-import subprocess
 import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -28,11 +26,11 @@ TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 DEFAULT_TEXT = "@kaidamaal"
-DEFAULT_POSITION = "bottom-right"
 
 
 def update_progress_bar(current, total, start_time):
     elapsed_time = time.time() - start_time
+    elapsed_time = max(elapsed_time, 1)  # Avoid division by zero
     speed = current / (1024 * 1024 * elapsed_time)  # Speed in MB/s
     progress = int(20 * current / total)
     bar = "🟩" * progress + "⬜️" * (20 - progress)
@@ -43,31 +41,34 @@ def update_progress_bar(current, total, start_time):
 async def download_file_with_progress(client, message: Message, file_path: str):
     total_size = message.video.file_size
     start_time = time.time()
+    progress_message = await message.reply_text("Downloading...")
     async for chunk in client.download_media(
             message, file_name=file_path):
         downloaded_size = os.path.getsize(file_path)
         progress_text = update_progress_bar(downloaded_size, total_size, start_time)
         try:
-            await message.reply_text(progress_text, quote=True)
+            await progress_message.edit_text(progress_text)
         except:
             pass
+    await progress_message.delete()
     return file_path
 
 
 async def upload_file_with_progress(client, chat_id, file_path: str, reply_message: Message):
     total_size = os.path.getsize(file_path)
     start_time = time.time()
-
+    progress_message = await reply_message.reply_text("Uploading...")
     async for _ in client.send_video(chat_id, video=file_path, reply_to_message_id=reply_message.message_id):
         uploaded_size = os.path.getsize(file_path)
         progress_text = update_progress_bar(uploaded_size, total_size, start_time)
         try:
-            await reply_message.edit_text(progress_text)
+            await progress_message.edit_text(progress_text)
         except:
             pass
+    await progress_message.delete()
 
 
-async def add_watermark_async(input_video, output_video, text=DEFAULT_TEXT, font_scale=0.5, border_thickness=1):
+async def add_watermark_async(input_video, output_video, text=DEFAULT_TEXT, font_scale=0.25, border_thickness=1):
     video = cv2.VideoCapture(input_video)
     fps = video.get(cv2.CAP_PROP_FPS)
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
