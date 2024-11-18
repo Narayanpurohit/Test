@@ -7,7 +7,9 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
 from pymongo import MongoClient
 from pyrogram.errors import FloodWait
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.editor import VideoFileClip, concatenate_videoclips,TextClip
+
+
 
 # Replace with your actual bot token and credentials
 API_ID = "15191874"  # Get this from my.telegram.org
