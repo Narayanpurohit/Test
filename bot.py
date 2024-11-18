@@ -5,7 +5,7 @@ import time
 import subprocess
 import logging
 from pyrogram import Client, filters
-from pyrogram.types import Message, InputMediaPhoto
+from pyrogram.types import Message
 
 # Logging setup
 logging.basicConfig(
@@ -20,99 +20,78 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Replace with your actual bot token and credentials
-API_ID = "9219444"
-API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"
-TOKEN = "7646833477:AAF_K4lzjzZmaB9LZzRLPfA0Hhr3SfSWOak"
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
+TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-# Load user settings from file
-user_settings = {}
-
-
-def load_user_settings():
-    global user_settings
-    if os.path.exists("user_settings.json"):
-        with open("user_settings.json", "r") as f:
-            user_settings = json.load(f)
-    logger.info("User settings loaded.")
-
-
-def save_user_settings():
-    with open("user_settings.json", "w") as f:
-        json.dump(user_settings, f)
-    logger.info("User settings saved.")
-
-
-# Default settings
 DEFAULT_TEXT = "@kaidamaal"
 DEFAULT_POSITION = "bottom-right"
-DEFAULT_SNAPSHOTS = 12
 
 
-async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, position=None,
-                              movement="moving", speed=2, direction="horizontal", loop=True, progress_message=None):
-    video = cv2.VideoCapture(video_path)
+def update_progress_bar(current, total, start_time):
+    elapsed_time = time.time() - start_time
+    speed = current / (1024 * 1024 * elapsed_time)  # Speed in MB/s
+    progress = int(20 * current / total)
+    bar = "🟩" * progress + "⬜️" * (20 - progress)
+    percentage = (current / total) * 100
+    return f"[{bar}] {percentage:.2f}% ({current / (1024 * 1024):.2f} MB/{total / (1024 * 1024):.2f} MB) at {speed:.2f} MB/s"
+
+
+async def download_file_with_progress(client, message: Message, file_path: str):
+    total_size = message.video.file_size
+    start_time = time.time()
+    async for chunk in client.download_media(
+            message, file_name=file_path):
+        downloaded_size = os.path.getsize(file_path)
+        progress_text = update_progress_bar(downloaded_size, total_size, start_time)
+        try:
+            await message.reply_text(progress_text, quote=True)
+        except:
+            pass
+    return file_path
+
+
+async def upload_file_with_progress(client, chat_id, file_path: str, reply_message: Message):
+    total_size = os.path.getsize(file_path)
+    start_time = time.time()
+
+    async for _ in client.send_video(chat_id, video=file_path, reply_to_message_id=reply_message.message_id):
+        uploaded_size = os.path.getsize(file_path)
+        progress_text = update_progress_bar(uploaded_size, total_size, start_time)
+        try:
+            await reply_message.edit_text(progress_text)
+        except:
+            pass
+
+
+async def add_watermark_async(input_video, output_video, text=DEFAULT_TEXT, font_scale=0.5, border_thickness=1):
+    video = cv2.VideoCapture(input_video)
     fps = video.get(cv2.CAP_PROP_FPS)
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    temp_video_path = "temp_video_no_audio.mp4"
-    out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
+    out = cv2.VideoWriter(output_video, fourcc, fps, (width, height))
 
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 1
-    font_thickness = 2
-    text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
-
-    if movement == "moving":
-        x, y = 0, height // 2
-        dx, dy = (speed, 0) if direction == "horizontal" else (0, speed)
-    else:
-        x, y = {
-            "top-left": (10, 30),
-            "top-right": (width - text_size[0] - 10, 30),
-            "bottom-left": (10, height - 20),
-            "bottom-right": (width - text_size[0] - 10, height - 20),
-            "center": ((width - text_size[0]) // 2, height // 2)
-        }.get(position, (10, 30))
-
-    frame_count = 0
-    last_update_time = time.time()
+    text_size = cv2.getTextSize(text, font, font_scale, border_thickness)[0]
+    text_x = 10
+    text_y = height - 10
 
     while True:
         ret, frame = video.read()
         if not ret:
             break
 
-        if movement == "moving":
-            x = (x + dx) % (width - text_size[0]) if loop else min(x + dx, width - text_size[0])
-
-        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
-        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        # Add watermark
+        cv2.putText(frame, text, (text_x, text_y), font, font_scale, (0, 0, 255), border_thickness * 4, cv2.LINE_AA)
+        cv2.putText(frame, text, (text_x, text_y), font, font_scale, (255, 255, 255), border_thickness, cv2.LINE_AA)
         out.write(frame)
-        frame_count += 1
-
-        if progress_message and time.time() - last_update_time > 1:
-            progress = int(20 * frame_count / total_frames)
-            bar = "🟩" * progress + "⬜️" * (20 - progress)
-            await progress_message.edit_text(
-                f"[{bar}] {frame_count / total_frames * 100:.2f}%\nFrames processed: {frame_count}/{total_frames}"
-            )
-            last_update_time = time.time()
 
     video.release()
     out.release()
-
-    command = [
-        "ffmpeg", "-y", "-i", temp_video_path, "-i", video_path, "-c:v", "copy", "-c:a", "aac",
-        "-map", "0:v:0", "-map", "1:a:0", output_path
-    ]
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    os.remove(temp_video_path)
 
 
 @app.on_message(filters.command("start"))
@@ -122,30 +101,30 @@ async def start(client, message: Message):
 
 @app.on_message(filters.video)
 async def handle_video(client, message: Message):
-    logger.info(f"Processing video for user: {message.from_user.id}")
     user_id = message.from_user.id
-    text = user_settings.get(user_id, {}).get('watermark_text', DEFAULT_TEXT)
-    position = user_settings.get(user_id, {}).get('position', DEFAULT_POSITION)
-
     progress_message = await message.reply_text("Starting video processing...")
 
-    video = await message.download()
-    output_path = f"{video}.watermarked.mp4"
+    video_path = f"{user_id}_input.mp4"
+    output_path = f"{user_id}_output.mp4"
+
+    # Download video with progress
+    await download_file_with_progress(client, message, video_path)
 
     try:
-        await add_watermark_async(video, output_path, text, position, progress_message=progress_message)
-        await progress_message.edit_text("✅ Processing complete!")
-        await message.reply_video(output_path, supports_streaming=True)
+        # Add watermark
+        await add_watermark_async(video_path, output_path)
+
+        # Upload video with progress
+        await upload_file_with_progress(client, message.chat.id, output_path, progress_message)
     except Exception as e:
-        logger.error(f"Error processing video: {e}")
-        await progress_message.edit_text("❌ An error occurred while processing the video.")
+        logger.error(f"Error: {e}")
+        await progress_message.edit_text("❌ An error occurred.")
     finally:
-        os.remove(video)
+        if os.path.exists(video_path):
+            os.remove(video_path)
         if os.path.exists(output_path):
             os.remove(output_path)
 
-
-load_user_settings()
 
 if __name__ == "__main__":
     app.run()
