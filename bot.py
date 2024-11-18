@@ -7,6 +7,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
 from pymongo import MongoClient
 from pyrogram.errors import FloodWait
+from moviepy.editor import VideoFileClip, concatenate_videoclips
 
 # Replace with your actual bot token and credentials
 API_ID = "15191874"  # Get this from my.telegram.org
@@ -152,13 +153,14 @@ def capture_snapshots(video_path, snapshot_count=DEFAULT_SNAPSHOTS):
     return snapshots
 
 # Function to display download progress bar
-def progress_bar(current, total, prefix='', length=40):
-    percent = ("{0:.1f}").format(100 * (current / float(total)))
-    filled_length = int(length * current // total)
-    bar = '█' * filled_length + '-' * (length - filled_length)
-    print(f'\r{prefix} |{bar}| {percent}% Complete', end="\r")
-    if current == total:
-        print()  # New line when complete
+async def progress_callback(current, total, progress_message, client):
+    try:
+        progress_percentage = (current / total) * 100
+        formatted_message = f"📥 Downloading... \n\n[{int(progress_percentage)}%]"
+        await progress_message.edit_text(formatted_message)
+    except Exception as e:
+        print(f"Error in progress_callback: {e}")
+         # New line when complete
 
 # Command to start the bot
 
@@ -235,7 +237,7 @@ async def handle_video_or_document(client, message: Message):
             f"➔ **Speed**: {speed / 1_048_576:.2f} MB/s\n"
             f"➔ **Time Left**: {int(time_left)}s"
         )
-        client.loop.create_task(progress_message.edit_text(formatted_message))
+        await progress_message.edit_text(formatted_message)
 
     try:
         video_path = await message.download(progress=progress_callback)
