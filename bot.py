@@ -4,7 +4,8 @@ import logging
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pymongo import MongoClient
-
+from moviepy.config import change_settings
+change_settings({"IMAGEMAGICK_BINARY": "/usr/bin/convert"})
 # Replace with your actual bot token and credentials
 API_ID = "15191874"
 API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
