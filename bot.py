@@ -9,7 +9,7 @@ change_settings({"IMAGEMAGICK_BINARY": "/usr/bin/convert"})
 # Replace with your actual bot token and credentials
 API_ID = "15191874"
 API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
-TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
+BOT_TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
