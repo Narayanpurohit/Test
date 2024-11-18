@@ -161,6 +161,118 @@ def progress_bar(current, total, prefix='', length=40):
         print()  # New line when complete
 
 # Command to start the bot
+
+def add_watermark(input_path, output_path, text, position, size, snapshots):
+    video = VideoFileClip(input_path)
+
+    # Set watermark size
+    font_size = {"small": 30, "medium": 50, "large": 70}.get(size, 50)
+
+    # Create TextClip
+    watermark = TextClip(text, fontsize=font_size, color='white')
+    watermark = watermark.set_duration(video.duration)
+
+    # Set position
+    if position == "top-left":
+        watermark = watermark.set_position(("left", "top"))
+    elif position == "top-right":
+        watermark = watermark.set_position(("right", "top"))
+    elif position == "bottom-left":
+        watermark = watermark.set_position(("left", "bottom"))
+    elif position == "bottom-right":
+        watermark = watermark.set_position(("right", "bottom"))
+    else:  # Default position
+        watermark = watermark.set_position(("center", "center"))
+
+    # Merge watermark with video
+    final_video = CompositeVideoClip([video, watermark])
+    final_video.write_videofile(output_path, codec="libx264", fps=24)
+
+    # Optionally create snapshots
+    if snapshots > 0:
+        snapshot_interval = video.duration / snapshots
+        for i in range(snapshots):
+            snapshot_time = snapshot_interval * i
+            video.save_frame(f"{output_path}_snapshot_{i + 1}.jpg", t=snapshot_time)
+
+# Handle Video/Document
+@app.on_message(filters.video | filters.document)
+async def handle_video_or_document(client, message: Message):
+    user_id = message.from_user.id
+    user_data = users_collection.find_one({"user_id": user_id})
+
+    if not user_data:
+        # Default user settings if not in database
+        user_data = {
+            "watermark_text": "My Watermark",
+            "position": "top-right",
+            "size": "medium",
+            "snapshots": 5
+        }
+        users_collection.insert_one({"user_id": user_id, **user_data})
+
+    text = user_data.get('watermark_text', "My Watermark")
+    position = user_data.get('position', "top-right")
+    size = user_data.get('size', "medium")
+    snapshots = user_data.get('snapshots', 5)
+
+    progress_message = await message.reply_text("📥 Starting download...")
+
+    start_time = time.time()
+
+    # Progress Callback
+    def progress_callback(current, total):
+        elapsed_time = time.time() - start_time
+        percentage = current / total * 100
+        speed = current / elapsed_time if elapsed_time > 0 else 0
+        time_left = (total - current) / speed if speed > 0 else 0
+
+        bar = "🟩" * int(percentage // 5) + "⬜️" * (20 - int(percentage // 5))
+        formatted_message = (
+            f"📥 **Downloading... from DC4**\n\n"
+            f"[{bar}] {percentage:.2f}%\n"
+            f"➔ {current / 1_048_576:.2f} MB of {total / 1_048_576:.2f} MB\n"
+            f"➔ **Speed**: {speed / 1_048_576:.2f} MB/s\n"
+            f"➔ **Time Left**: {int(time_left)}s"
+        )
+        client.loop.create_task(progress_message.edit_text(formatted_message))
+
+    try:
+        video_path = await message.download(progress=progress_callback)
+
+        output_path = f"{video_path}.watermarked.mp4"
+
+        add_watermark(
+            input_path=video_path,
+            output_path=output_path,
+            text=text,
+            position=position,
+            size=size,
+            snapshots=snapshots
+        )
+
+        await progress_message.edit_text("📤 Uploading your watermarked video...")
+        await message.reply_video(output_path, supports_streaming=True)
+
+        # Clean up temporary files
+        os.remove(video_path)
+        os.remove(output_path)
+        for i in range(snapshots):
+            snapshot_path = f"{output_path}_snapshot_{i + 1}.jpg"
+            if os.path.exists(snapshot_path):
+                os.remove(snapshot_path)
+
+        await progress_message.edit_text("✅ Your video has been processed successfully!")
+
+    except Exception as e:
+        await progress_message.edit_text("❌ An error occurred while processing your video.")
+        print(f"Error: {e}")
+
+
+
+
+
+
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
     await message.reply_text(
