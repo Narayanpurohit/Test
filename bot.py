@@ -223,7 +223,7 @@ async def handle_video_or_document(client, message: Message):
     start_time = time.time()
 
     # Progress Callback
-    def progress_callback(current, total):
+    async def progress_callback(current, total):
         elapsed_time = time.time() - start_time
         percentage = current / total * 100
         speed = current / elapsed_time if elapsed_time > 0 else 0
