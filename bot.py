@@ -20,9 +20,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Replace with your actual bot token and credentials
-API_ID = "123456"
-API_HASH = "abcde1234567890"
-TOKEN = "1234567890:ABCDEFGH"
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
+TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
