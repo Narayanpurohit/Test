@@ -1,3 +1,8 @@
+
+
+# Replace with your actual bot token and credentials
+
+
 import os
 import cv2
 import json
