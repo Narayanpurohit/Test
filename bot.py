@@ -56,8 +56,18 @@ DEFAULT_POSITION = "bottom-right"
 DEFAULT_SNAPSHOTS = 12
 
 
+
 async def add_watermark_async(
-    video_path, output_path, text=DEFAULT_TEXT, position="bottom-right", progress_message=None
+    video_path,
+    output_path,
+    text="Watermark",            # Default watermark text
+    position="bottom-right",     # Default position
+    border_color=(0, 0, 0),      # Black border
+    text_color=(255, 255, 255),  # White text
+    font_scale=0.5,              # Adjust text size
+    font_thickness=1,            # Thickness of text
+    border_thickness=2,          # Thickness of border
+    progress_message=None
 ):
     video = cv2.VideoCapture(video_path)
     fps = video.get(cv2.CAP_PROP_FPS)
@@ -69,14 +79,11 @@ async def add_watermark_async(
     temp_video_path = "temp_video_no_audio.mp4"
     out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
 
-    # Define font properties
+    # Define text size for positioning
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5  # Adjust size for smaller watermark
-    font_thickness = 1  # Thin watermark text
-    border_thickness = 2  # Proportional border thickness
     text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
 
-    # Define static positions
+    # Define positions
     positions = {
         "top-left": (10, 30),
         "top-center": ((width - text_size[0]) // 2, 30),
@@ -87,8 +94,9 @@ async def add_watermark_async(
         "bottom-left": (10, height - 20),
         "bottom-center": ((width - text_size[0]) // 2, height - 20),
         "bottom-right": (width - text_size[0] - 10, height - 20),
-        "top-left-corner": (30, 50),
     }
+
+    # Get position coordinates
     x, y = positions.get(position, positions["bottom-right"])  # Default to bottom-right
 
     frame_count = 0
@@ -99,9 +107,9 @@ async def add_watermark_async(
         if not ret:
             break
 
-        # Add static watermark
-        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), border_thickness, cv2.LINE_AA)  # Border
-        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)  # Text
+        # Add static watermark with customizable border and text color
+        cv2.putText(frame, text, (x, y), font, font_scale, border_color, border_thickness, cv2.LINE_AA)  # Border
+        cv2.putText(frame, text, (x, y), font, font_scale, text_color, font_thickness, cv2.LINE_AA)  # Text
         out.write(frame)
         frame_count += 1
 
