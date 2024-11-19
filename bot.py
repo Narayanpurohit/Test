@@ -56,8 +56,9 @@ DEFAULT_POSITION = "bottom-right"
 DEFAULT_SNAPSHOTS = 12
 
 
-async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, position=None,
-                              movement="moving", speed=2, direction="horizontal", loop=True, progress_message=None):
+async def add_watermark_async(
+    video_path, output_path, text=DEFAULT_TEXT, position="bottom-right", progress_message=None
+):
     video = cv2.VideoCapture(video_path)
     fps = video.get(cv2.CAP_PROP_FPS)
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -68,23 +69,27 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
     temp_video_path = "temp_video_no_audio.mp4"
     out = cv2.VideoWriter(temp_video_path, fourcc, fps, (width, height))
 
+    # Define font properties
     font = cv2.FONT_HERSHEY_SIMPLEX
-    font_scale = 0.5
-    font_thickness = 2
-    border_thickness=1
+    font_scale = 0.5  # Adjust size for smaller watermark
+    font_thickness = 1  # Thin watermark text
+    border_thickness = 2  # Proportional border thickness
     text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
 
-    if movement == "moving":
-        x, y = 0, height // 2
-        dx, dy = (speed, 0) if direction == "horizontal" else (0, speed)
-    else:
-        x, y = {
-            "top-left": (10, 30),
-            "top-right": (width - text_size[0] - 10, 30),
-            "bottom-left": (10, height - 20),
-            "bottom-right": (width - text_size[0] - 10, height - 20),
-            "center": ((width - text_size[0]) // 2, height // 2)
-        }.get(position, (10, 30))
+    # Define static positions
+    positions = {
+        "top-left": (10, 30),
+        "top-center": ((width - text_size[0]) // 2, 30),
+        "top-right": (width - text_size[0] - 10, 30),
+        "center-left": (10, (height + text_size[1]) // 2),
+        "center": ((width - text_size[0]) // 2, (height + text_size[1]) // 2),
+        "center-right": (width - text_size[0] - 10, (height + text_size[1]) // 2),
+        "bottom-left": (10, height - 20),
+        "bottom-center": ((width - text_size[0]) // 2, height - 20),
+        "bottom-right": (width - text_size[0] - 10, height - 20),
+        "top-left-corner": (30, 50),
+    }
+    x, y = positions.get(position, positions["bottom-right"])  # Default to bottom-right
 
     frame_count = 0
     last_update_time = time.time()
@@ -94,19 +99,16 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
         if not ret:
             break
 
-        if movement == "moving":
-            x = (x + dx) % (width - text_size[0]) if loop else min(x + dx, width - text_size[0])
-
-        #cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
-        #cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        # Add static watermark
         cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), border_thickness, cv2.LINE_AA)  # Border
-        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), border_thickness, cv2.LINE_AA)  # Main text
+        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)  # Text
         out.write(frame)
         frame_count += 1
 
+        # Update progress
         if progress_message and time.time() - last_update_time > 1:
             progress = int(20 * frame_count / total_frames)
-            bar = "🟩" * progress + "⬜️" * (20 - progress)
+            bar = "●" * progress + "○" * (20 - progress)
             await progress_message.edit_text(
                 f"[{bar}] {frame_count / total_frames * 100:.2f}%\nFrames processed: {frame_count}/{total_frames}"
             )
@@ -115,13 +117,13 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
     video.release()
     out.release()
 
+    # Merge video with original audio
     command = [
         "ffmpeg", "-y", "-i", temp_video_path, "-i", video_path, "-c:v", "copy", "-c:a", "aac",
         "-map", "0:v:0", "-map", "1:a:0", output_path
     ]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     os.remove(temp_video_path)
-
 
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
