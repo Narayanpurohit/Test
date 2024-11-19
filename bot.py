@@ -99,7 +99,7 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
 
         #cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
         #cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
-        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), border_thickness * 4, cv2.LINE_AA)  # Border
+        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), border_thickness, cv2.LINE_AA)  # Border
         cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), border_thickness, cv2.LINE_AA)  # Main text
         out.write(frame)
         frame_count += 1
