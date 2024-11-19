@@ -96,8 +96,10 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
         if movement == "moving":
             x = (x + dx) % (width - text_size[0]) if loop else min(x + dx, width - text_size[0])
 
-        cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
-        cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        #cv2.putText(frame, text, (x, y), font, font_scale, (0, 0, 255), font_thickness * 3, cv2.LINE_AA)
+        #cv2.putText(frame, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
+        cv2.putText(frame, text, (text_x, text_y), font, font_scale, (0, 0, 255), border_thickness * 4, cv2.LINE_AA)  # Border
+        cv2.putText(frame, text, (text_x, text_y), font, font_scale, (255, 255, 255), border_thickness, cv2.LINE_AA)  # Main text
         out.write(frame)
         frame_count += 1
 
