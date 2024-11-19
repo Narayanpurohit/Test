@@ -71,7 +71,7 @@ async def add_watermark_async(video_path, output_path, text=DEFAULT_TEXT, positi
     font = cv2.FONT_HERSHEY_SIMPLEX
     font_scale = 1
     font_thickness = 1
-    border_thickness=0.1
+    border_thickness=1
     text_size = cv2.getTextSize(text, font, font_scale, font_thickness)[0]
 
     if movement == "moving":
