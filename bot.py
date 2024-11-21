@@ -13,9 +13,9 @@ logging.basicConfig(
 )
 
 # Replace with your actual bot token
-API_ID = "9219444"  # Get from my.telegram.org
-API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # Get from my.telegram.org
-TOKEN = "7872041420:AAFc6wzRW3L0e9FtcRQrQOfb9Rdz35MVLKY"  # Replace with your bot's token
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
+TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
