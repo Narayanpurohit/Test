@@ -2,7 +2,8 @@ import os
 import subprocess
 from pyrogram import Client, filters
 from pyrogram.types import Message
-from tqdm import tqdm  # Import tqdm for progress bar
+from tqdm import tqdm
+from time import time
 
 # Replace with your actual bot token
 API_ID = "15191874"
@@ -12,39 +13,35 @@ TOKEN = "7481801715:AAEV22RePMaDqd2tyxH0clxtnqd5hDpRuTw"
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
+def format_progress(current, total, speed, eta):
+    """Generates a progress bar for download and upload."""
+    percent = (current / total) * 100
+    bar = "⬢" * int(percent / 5) + "⬡" * (20 - int(percent / 5))
+    return (
+        f"⬢⬢⬢⬢⬢⬢⬢⬢⬢⬢⬡⬡⬡⬡⬡⬡⬡⬡⬡⬡\n"
+        f"╭━━━━❰ᴘʀᴏɢʀᴇss ʙᴀʀ❱━➣\n"
+        f"┣⪼ 🗃️ Sɪᴢᴇ: {current / 1024 / 1024:.2f} Mʙ | {total / 1024 / 1024:.2f} Mʙ\n"
+        f"┣⪼ ⏳️ Dᴏɴᴇ : {percent:.2f}%\n"
+        f"┣⪼ 🚀 Sᴩᴇᴇᴅ: {speed / 1024 / 1024:.2f} Mʙ/s\n"
+        f"┣⪼ ⏰️ Eᴛᴀ: {eta}s\n"
+        f"╰━━━━━━━━━━━━━━━➣"
+    )
+
+async def progress_handler(current, total, message, start_time):
+    """Tracks and updates progress for download or upload."""
+    elapsed_time = time() - start_time
+    speed = current / elapsed_time if elapsed_time > 0 else 0
+    eta = int((total - current) / speed) if speed > 0 else 0
+
+    progress_text = format_progress(current, total, speed, eta)
+    await message.edit_text(f"⚠️Please wait...\n\n☃️ Dᴏᴡɴʟᴏᴀᴅ Sᴛᴀʀᴛᴇᴅ....\n\n{progress_text}")
+
 def add_watermark(video_path, output_path):
-    # Define watermark texts
-    moving_watermark_text = "@PrimeDose"  # Moving watermark text
-    static_watermark_text = "Telegram @PrimeDose\nFollow us for updates!"  # Static watermark text with line break
-    top_left_static_text = "@PrimeDose"  # Top-left watermark text
+    """Adds watermarks to a video."""
+    moving_watermark_text = "@PrimeDose"
+    static_watermark_text = "Telegram @PrimeDose\nFollow us for updates!"
+    top_left_static_text = "@PrimeDose"
 
-    # Get video information (fps, width, height) for progress bar
-    video_info = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,avg_frame_rate", "-of", "default=noprint_wrappers=1", video_path],
-        capture_output=True, text=True
-    )
-    fps = eval(video_info.stdout.split("avg_frame_rate=")[1].split("\n")[0])
-    width = int(video_info.stdout.split("width=")[1].split("\n")[0])
-    height = int(video_info.stdout.split("height=")[1].split("\n")[0])
-
-    # Get total number of frames in the video for progress bar
-    frame_count_info = subprocess.run(
-        ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=nb_frames", "-of", "default=noprint_wrappers=1", video_path],
-        capture_output=True, text=True
-    )
-
-    # Check if frame count info contains valid data or "N/A"
-    frame_count_output = frame_count_info.stdout.strip().split("=")
-    if len(frame_count_output) > 1:
-        frame_count_str = frame_count_output[1]
-        if frame_count_str != "N/A":
-            total_frames = int(frame_count_str)
-        else:
-            total_frames = 0  # If "N/A", set total frames to 0, or handle as needed
-    else:
-        total_frames = 0  # Fallback to 0 if no frame count is found
-
-    # FFmpeg command to overlay watermark
     command = [
         "ffmpeg", "-i", video_path,
         "-vf", (
@@ -55,8 +52,7 @@ def add_watermark(video_path, output_path):
         "-c:v", "libx264", "-crf", "23", "-preset", "fast", "-c:a", "aac", "-strict", "experimental", "-y", output_path
     ]
 
-    # Process video with progress bar
-    with tqdm(total=total_frames, desc="Processing Video", unit="frame") as pbar:
+    with tqdm(total=100, desc="Processing Video", unit="frame") as pbar:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         while True:
             output = process.stderr.read(1)
@@ -67,51 +63,45 @@ def add_watermark(video_path, output_path):
 
     return output_path
 
-def generate_thumbnail(video_path, width, height):
-    """
-    Generates a thumbnail for the video. The thumbnail is in portrait mode
-    if the video is portrait, otherwise, it is in landscape mode.
-    """
-    thumbnail_path = "thumbnail.jpg"
-
-    if height > width:  # Portrait mode
-        subprocess.run([
-            "ffmpeg", "-y", "-i", video_path, "-vframes", "1", "-an", "-s", "320x720", thumbnail_path
-        ])
-    else:  # Landscape mode
-        subprocess.run([
-            "ffmpeg", "-y", "-i", video_path, "-vframes", "1", "-an", "-s", "480x320", thumbnail_path
-        ])
-
-    return thumbnail_path
-
 @app.on_message(filters.command("start"))
-async def start(client, update: Message):  # Accept both 'client' and 'update'
+async def start(client, update: Message):
     await update.reply_text("Send me a video and I'll add two watermarks to it! One will move and the other will be static.")
 
 @app.on_message(filters.video)
 async def handle_video(client, update: Message):
-    # Get the video file
-    video = await update.download()
+    message = await update.reply_text("⚠️Please wait...\n\n☃️ Dᴏᴡɴʟᴏᴀᴅ Sᴛᴀʀᴛᴇᴅ....")
+    start_time = time()
 
-    # Generate paths for input and output
+    # Download the video with progress
+    video = await client.download_media(
+        message=update.video.file_id,
+        progress=progress_handler,
+        progress_args=(message, start_time)
+    )
+
+    # Paths for input and output
     input_path = video
-    output_path = f"{video}.watermarked.mp4"  # Ensure .mp4 extension for output
+    output_path = f"{video}.watermarked.mp4"
 
-    # Add both moving and static watermarks to the video and keep audio
-    output_video_path = add_watermark(input_path, output_path)
+    # Add watermarks
+    await message.edit_text("⚠️Please wait...\n\n✨ Aᴅᴅɪɴɢ ᴡᴀᴛᴇʀᴍᴀʀᴋ....")
+    add_watermark(input_path, output_path)
 
-    # Generate a thumbnail for the video
-    thumbnail_path = generate_thumbnail(input_path, 1920, 1080)  # You can adjust the width/height
+    # Upload the watermarked video
+    await message.edit_text("⚠️Please wait...\n\n⬆️ Uᴘʟᴏᴀᴅɪɴɢ ᴠɪᴅᴇᴏ....")
+    start_time = time()
+    await client.send_document(
+        chat_id=update.chat.id,
+        document=output_path,
+        progress=progress_handler,
+        progress_args=(message, start_time)
+    )
 
-    # Send the watermarked video back to the user with thumbnail
-    await update.reply_video(output_video_path, thumb=thumbnail_path)
-
-    # Clean up the temporary files
+    # Cleanup
     os.remove(input_path)
-    os.remove(output_video_path)
-    os.remove(thumbnail_path)  # Remove the generated thumbnail after use
+    os.remove(output_path)
+
+    await message.edit_text("✅ Done!")
 
 if __name__ == "__main__":
     app.run()
-
