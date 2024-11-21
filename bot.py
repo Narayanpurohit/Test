@@ -108,8 +108,10 @@ async def handle_video(client, update: Message):
 
     # Send the watermarked video back to the user with thumbnail
     await status.edit_text("⚠️ **Please wait...**\n\n📤 **Uᴘʟᴏᴀᴅɪɴɢ ᴠɪᴅᴇᴏ...**")
-    await update.reply_video(output_video_path, thumb=thumbnail_path)
-
+    await update.reply_document(
+    document=output_video_path,
+    caption="Here is your watermarked video!",
+)
     # Clean up the temporary files
     os.remove(input_path)
     os.remove(output_video_path)
