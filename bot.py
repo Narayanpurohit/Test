@@ -91,12 +91,12 @@ async def start(client, update: Message):  # Accept both 'client' and 'update'
 
 @app.on_message(filters.video)
 async def handle_video(client, update: Message):
-    print("downloading")
+    status = await update.reply_text("⚠️ **Please wait...**\n\n📥 **Dᴏᴡɴʟᴏᴀᴅ Sᴛᴀʀᴛᴇᴅ...**")
     # Get the video file
     video = await update.download()
 
     # Generate paths for input and output
-    print("procecing")
+    await status.edit_text("⚠️ **Please wait...**\n\n🎞️ **Aᴅᴅɪɴɢ ᴡᴀᴛᴇʀᴍᴀʀᴋ...**")
     input_path = video
     output_path = f"{video}.watermarked.mp4"  # Ensure .mp4 extension for output
 
@@ -107,13 +107,14 @@ async def handle_video(client, update: Message):
     thumbnail_path = generate_thumbnail(input_path, 1920, 1080)  # You can adjust the width/height
 
     # Send the watermarked video back to the user with thumbnail
-    print("uploading")
+    await status.edit_text("⚠️ **Please wait...**\n\n📤 **Uᴘʟᴏᴀᴅɪɴɢ ᴠɪᴅᴇᴏ...**")
     await update.reply_video(output_video_path, thumb=thumbnail_path)
 
     # Clean up the temporary files
     os.remove(input_path)
     os.remove(output_video_path)
     os.remove(thumbnail_path)  # Remove the generated thumbnail after use
+    await status.delete()
 
 if __name__ == "__main__":
     app.run()
