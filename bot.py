@@ -89,7 +89,7 @@ def generate_thumbnail(video_path, width, height):
 async def start(client, update: Message):  # Accept both 'client' and 'update'
     await update.reply_text("Send me a video and I'll add two watermarks to it! One will move and the other will be static.")
 
-@app.on_message(filters.video)
+@app.on_message(filters.video | filters.document)
 async def handle_video(client, update: Message):
     status = await update.reply_text("⚠️ **Please wait...**\n\n📥 **Dᴏᴡɴʟᴏᴀᴅ Sᴛᴀʀᴛᴇᴅ...**")
     # Get the video file
