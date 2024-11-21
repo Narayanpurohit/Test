@@ -7,7 +7,7 @@ from tqdm import tqdm  # Import tqdm for progress bar
 # Replace with your actual bot token
 API_ID = "9219444"  # You need to get this from my.telegram.org
 API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # You need to get this from my.telegram.org
-TOKEN = "7872041420:AAFc6wzRW3L0e9FtcRQrQOfb9Rdz35MVLKY"  # Replace with your bot's token
+TOKEN = "6677023637:AAH6c6mDWqBobVmXjqhwWdYSdzPz87OO9y8"  # Replace with your bot's token
 
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
