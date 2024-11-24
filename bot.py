@@ -93,7 +93,9 @@ async def start(client, update: Message):  # Accept both 'client' and 'update'
 @app.on_message(filters.video)
 async def handle_video(client, update: Message):
     # Get the video file
+    await message.reply_text("📥 Downloading your video...")
     video = await update.download()
+    await progress_message.edit_text("📤 adding watermark to your video...")
 
     # Generate paths for input and output
     input_path = video
@@ -106,6 +108,7 @@ async def handle_video(client, update: Message):
     thumbnail_path = generate_thumbnail(input_path, 1920, 1080)  # You can adjust the width/height
 
     # Send the watermarked video back to the user with thumbnail
+    await progress_message.edit_text("📤 Uploading your watermarked video...")
     await update.reply_video(output_video_path, thumb=thumbnail_path)
 
     # Clean up the temporary files
