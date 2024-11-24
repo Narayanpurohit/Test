@@ -15,9 +15,9 @@ app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 def add_watermark(video_path, output_path):
     # Define watermark texts
-    moving_watermark_text = "jn-bots.in"  # Moving watermark text
-    static_watermark_text = "download/watch movies and web series at jn-bots.in"  # Static watermark text with line break
-    top_left_static_text = "jn-bots.in"  # Top-left watermark text
+    moving_watermark_text = "jn-bots in"  # Moving watermark text
+    static_watermark_text = "download/watch movies and web series at jn-bots in"  # Static watermark text with line break
+    top_left_static_text = "jn-bots in"  # Top-left watermark text
 
     # Get video information (fps, width, height) for progress bar
     video_info = subprocess.run(
