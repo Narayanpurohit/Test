@@ -35,7 +35,7 @@ DEFAULT_POSITION = "bottom-right"
 DEFAULT_SNAPSHOTS = 12
 
 # Function to add a watermark to a video (without audio)
-async def add_watermark_async(
+async def add_watermark(
     video_path,
     output_path,
     text="Watermark",            # Default watermark text
