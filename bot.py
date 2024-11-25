@@ -15,7 +15,7 @@ app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 def add_watermark(video_path, output_path):
     # Define watermark texts
-    moving_watermark_text = "@PrimeDose"  # Moving watermark text
+    moving_watermark_text = "@jn"  # Moving watermark text
     static_watermark_text = "Telegram @PrimeDose\nFollow us for updates!"  # Static watermark text with line break
     top_left_static_text = "@PrimeDose"  # Top-left watermark text
 
