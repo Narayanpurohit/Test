@@ -1,12 +1,10 @@
-
-
-
 import os
 import subprocess
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from tqdm import tqdm  # Import tqdm for progress bar
 
+# Replace with your actual bot token
 # Replace with your actual bot token
 API_ID = "9219444"  # You need to get this from my.telegram.org
 API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # You need to get this from my.telegram.org
@@ -17,9 +15,9 @@ app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
 def add_watermark(video_path, output_path):
     # Define watermark texts
-    moving_watermark_text = "jn-bots.in"  # Moving watermark text
-    static_watermark_text = "download/watch at jn-bots.in"  # Static watermark text with line break
-    top_left_static_text = "jn-bots.in"  # Top-left watermark text
+    moving_watermark_text = "@PrimeDose"  # Moving watermark text
+    static_watermark_text = "Telegram @PrimeDose\nFollow us for updates!"  # Static watermark text with line break
+    top_left_static_text = "@PrimeDose"  # Top-left watermark text
 
     # Get video information (fps, width, height) for progress bar
     video_info = subprocess.run(
