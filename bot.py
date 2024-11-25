@@ -30,7 +30,7 @@ def save_user_settings():
         json.dump(user_settings, f)
 
 # Default settings
-DEFAULT_TEXT = "@kaidamaal"
+DEFAULT_TEXT = "jn-bots.in"
 DEFAULT_POSITION = "bottom-right"
 DEFAULT_SNAPSHOTS = 12
 
