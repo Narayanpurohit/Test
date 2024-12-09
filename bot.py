@@ -13,11 +13,8 @@ TOKEN = "7481801715:AAFDx2mtLguQMvYmN4zJBdB-RnC7y2pIR5Y"  # Replace with your bo
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-# Load user settings from file
+openai.api_key = "your_openai_api_key"  
 
-    # OpenCV VideoWriter for processing frames without audio
-    
-# Command to start the bot
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
     await message.reply_text(
@@ -26,6 +23,7 @@ async def start(client, message: Message):
         "watermark movement, and more.\n\n"
         "Use /help to see all available commands."
     )
+
 
 
 @app.on_message(filters.command("imagine"))  # Triggered by "/imagine" command
@@ -38,22 +36,21 @@ async def generate_image(client, message: Message):
         return
 
     try:
-        # Generate an image using MukeshAPI
-        response = api.ai_image(prompt)
-        image_path = "generated_image.jpg"  # Path to save the image
+        # Generate an image using OpenAI's DALL·E API
+        response = openai.Image.create(
+            prompt=prompt,
+            n=1,  # Number of images
+            size="512x512"  # Image size
+        )
+        image_url = response['data'][0]['url']  # Get the image URL
 
-        # Save the image to a file
-        with open(image_path, 'wb') as f:
-            f.write(response)
-
-        print("Image generated successfully")
+        print("Image generated successfully:", image_url)
 
         # Send the generated image to the user
-        await message.reply_photo(photo=image_path, caption="Here is your generated image!")
+        await message.reply_photo(photo=image_url, caption="Here is your generated image!")
     except Exception as e:
         print(f"Error generating image: {e}")
         await message.reply("Sorry, I couldn't generate the image. Please try again later.")
-
 
 
 
