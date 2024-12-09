@@ -3,6 +3,7 @@
 import os
 from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
+from MukeshAPI import api 
 
 # Replace with your actual bot token and credentials
 API_ID = "9219444"  # You need to get this from my.telegram.org
