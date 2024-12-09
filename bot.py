@@ -26,29 +26,41 @@ async def start(client, message: Message):
         "Use /help to see all available commands."
     )
 
-# Command to display help
-@app.on_message(filters.command("help"))
-async def help(client, message: Message):
-    await message.reply_text(
-        "📜 HELP MENU 📜\n\n"
-        "Use the following commands to control the bot:\n\n"
-        "/set_watermark <text> - Set custom watermark text.\n"
-        "/position <top-left | top-right | bottom-left | bottom-right | center> - Set watermark position.\n"
-        "/movement <static | moving> - Set watermark type.\n"
-        "/speed <1-10> - Set speed for moving watermark.\n"
-        "/direction <horizontal | vertical> - Set direction for moving watermark.\n"
-        "/loop <yes | no> - Set if moving watermark loops back.\n"
-        "/snapshots <number> - Set the number of snapshots.\n"
-        "/snap - Take snapshots from video.\n"
-        "/clear - Clear all media files.\n\n"
-        "💡 Send a video to start adding watermarks and snapshots!"
-    )
+
+@app.on_message(filters.command("imagine"))  # Triggered by "/imagine" command
+async def generate_image(client, message: Message):
+    user_message = message.text
+    prompt = " ".join(user_message.split()[1:])  # Extract the prompt after the command
+
+    if not prompt:
+        await message.reply("Please provide a prompt for the image. Example: `/imagine a cute boy`")
+        return
+
+    try:
+        # Generate an image using MukeshAPI
+        response = api.ai_image(prompt)
+        image_path = "generated_image.jpg"  # Path to save the image
+
+        # Save the image to a file
+        with open(image_path, 'wb') as f:
+            f.write(response)
+
+        print("Image generated successfully")
+
+        # Send the generated image to the user
+        await message.reply_photo(photo=image_path, caption="Here is your generated image!")
+    except Exception as e:
+        print(f"Error generating image: {e}")
+        await message.reply("Sorry, I couldn't generate the image. Please try again later.")
 
 
-@app.on_message()
+
+
+@app.on_message(filters.text)
 async def handle_video(client, message: Message):
     user_id = message.from_user.id
-    print("hii")
+    user_message = message.text
+    print(user_message)
 
 if __name__ == "__main__":
     app.run()
