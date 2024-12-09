@@ -13,7 +13,7 @@ TOKEN = "7481801715:AAFDx2mtLguQMvYmN4zJBdB-RnC7y2pIR5Y"  # Replace with your bo
 # Initialize the Pyrogram Client
 app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-openai.api_key = "your_openai_api_key"  
+openai.api_key = "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"  
 
 @app.on_message(filters.command("start"))
 async def start(client, message: Message):
