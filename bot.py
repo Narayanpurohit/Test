@@ -1,10 +1,6 @@
 
 
 import os
-import cv2
-import json
-import time
-import subprocess
 from pyrogram import Client, filters
 from pyrogram.types import Message, InputMediaPhoto
 
