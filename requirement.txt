@@ -1,2 +1,2 @@
-pyrogram==2.0.106
-tqdm==4.66.1
+pyrogram==2.0.63
+requests==2.31.0
