@@ -4,9 +4,9 @@ import os
 import time
 
 # Your bot token, API ID, and API Hash
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-API_ID = "YOUR_API_ID"
-API_HASH = "YOUR_API_HASH"
+BOT_TOKEN = "7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s"
+API_ID = "15191874"
+API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
 
 # Directory to store downloaded files temporarily
 DOWNLOAD_DIR = "downloads"
