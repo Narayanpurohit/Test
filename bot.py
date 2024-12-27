@@ -1,65 +1,105 @@
-
-
-import os
 from pyrogram import Client, filters
-from pyrogram.types import Message, InputMediaPhoto
-import openai  
+import requests
+import os
+import time
 
-# Replace with your actual bot token and credentials
-API_ID = "9219444"  # You need to get this from my.telegram.org
-API_HASH = "9db23f3d7d8e7fc5144fb4dd218c8cc3"  # You need to get this from my.telegram.org
-TOKEN = "7481801715:AAFDx2mtLguQMvYmN4zJBdB-RnC7y2pIR5Y"  # Replace with your bot's token
+# Your bot token, API ID, and API Hash
+BOT_TOKEN = "YOUR_BOT_TOKEN"
+API_ID = "YOUR_API_ID"
+API_HASH = "YOUR_API_HASH"
 
-# Initialize the Pyrogram Client
-app = Client("watermark_bot", bot_token=TOKEN, api_id=API_ID, api_hash=API_HASH)
+# Directory to store downloaded files temporarily
+DOWNLOAD_DIR = "downloads"
 
-openai.api_key = "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"  
+# Initialize the bot
+app = Client("url_uploader_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-@app.on_message(filters.command("start"))
-async def start(client, message: Message):
-    await message.reply_text(
-        "👋 WELCOME to the Watermark Bot!\n\n"
-        "Send me a video, and I'll add a watermark to it. You can also configure settings for snapshots, "
-        "watermark movement, and more.\n\n"
-        "Use /help to see all available commands."
-    )
+# Ensure download directory exists
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
 
+@app.on_message(filters.private & filters.text)
+async def handle_url(client, message):
+    url = message.text.strip()
+    chat_id = message.chat.id
 
+    # Notify the user that the download has started
+    try:
+        progress_msg = await message.reply_text("🔄 Starting download...")
+    except Exception as e:
+        print(f"Error sending start message: {e}")
 
-@app.on_message(filters.command("imagine"))  # Triggered by "/imagine" command
-async def generate_image(client, message: Message):
-    user_message = message.text
-    prompt = " ".join(user_message.split()[1:])  # Extract the prompt after the command
+    # Validate URL and download file
+    try:
+        response = requests.get(url, stream=True, timeout=30)
+        response.raise_for_status()  # Check if the URL is accessible
 
-    if not prompt:
-        await message.reply("Please provide a prompt for the image. Example: `/imagine a cute boy`")
+        # Extract file name from URL or headers
+        file_name = url.split("/")[-1] or "file"
+        file_path = os.path.join(DOWNLOAD_DIR, file_name)
+
+        # Download the file with progress updates
+        total_size = int(response.headers.get("content-length", 0))
+        downloaded_size = 0
+        start_time = time.time()
+
+        with open(file_path, "wb") as file:
+            for chunk in response.iter_content(chunk_size=1024):
+                file.write(chunk)
+                downloaded_size += len(chunk)
+
+                # Update progress every 5 seconds
+                if time.time() - start_time >= 5:
+                    speed = downloaded_size / (time.time() - start_time)
+                    progress_text = (
+                        f"⬇️ Downloading...\n"
+                        f"Downloaded: {downloaded_size / 1024:.2f} KB / {total_size / 1024:.2f} KB\n"
+                        f"Speed: {speed / 1024:.2f} KB/s"
+                    )
+                    try:
+                        await progress_msg.edit_text(progress_text)
+                    except Exception as e:
+                        print(f"Error updating download progress: {e}")
+                    start_time = time.time()  # Reset start time for next update
+
+        await progress_msg.edit_text("✅ File downloaded successfully. Uploading to Telegram...")
+    except requests.exceptions.RequestException as e:
+        await progress_msg.edit_text(f"❌ Failed to download the file. Error: {e}")
+        return
+    except Exception as e:
+        await progress_msg.edit_text(f"❌ Unexpected error: {e}")
         return
 
+    # Upload the file to Telegram with progress updates
     try:
-        # Generate an image using OpenAI's DALL·E API
-        response = openai.Image.create(
-            prompt=prompt,
-            n=1,  # Number of images
-            size="512x512"  # Image size
-        )
-        image_url = response['data'][0]['url']  # Get the image URL
+        start_time = time.time()
+        uploaded_size = 0
 
-        print("Image generated successfully:", image_url)
+        async def progress(current, total):
+            nonlocal start_time, uploaded_size
+            uploaded_size = current
+            if time.time() - start_time >= 5:
+                speed = uploaded_size / (time.time() - start_time)
+                progress_text = (
+                    f"⬆️ Uploading...\n"
+                    f"Uploaded: {uploaded_size / 1024:.2f} KB / {total / 1024:.2f} KB\n"
+                    f"Speed: {speed / 1024:.2f} KB/s"
+                )
+                try:
+                    await progress_msg.edit_text(progress_text)
+                except Exception as e:
+                    print(f"Error updating upload progress: {e}")
+                start_time = time.time()  # Reset start time for next update
 
-        # Send the generated image to the user
-        await message.reply_photo(photo=image_url, caption="Here is your generated image!")
+        await client.send_document(chat_id, file_path, progress=progress)
+        await progress_msg.edit_text("✅ File uploaded to Telegram successfully.")
     except Exception as e:
-        print(f"Error generating image: {e}")
-        await message.reply("Sorry, I couldn't generate the image. Please try again later.")
+        await progress_msg.edit_text(f"❌ Failed to upload the file to Telegram. Error: {e}")
+    finally:
+        # Cleanup the downloaded file
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
-
-
-@app.on_message(filters.text)
-async def handle_video(client, message: Message):
-    user_id = message.from_user.id
-    user_message = message.text
-    print(user_message)
-
-if __name__ == "__main__":
-    app.run()
-
+# Start the bot
+print("Bot is running...")
+app.run()
