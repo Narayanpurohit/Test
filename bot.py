@@ -1,105 +1,67 @@
+from imdb import Cinemagoer
 from pyrogram import Client, filters
-import requests
-import os
-import time
 
+# Initialize IMDbPY
+ia = Cinemagoer()
 # Your bot token, API ID, and API Hash
-BOT_TOKEN = "7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s"
+BOT_TOKEN = "6677023637:AAFWgnwC7FVHV57mGlMRBusZqNFnV6nVktM"
 API_ID = "15191874"
 API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
 
-# Directory to store downloaded files temporarily
-DOWNLOAD_DIR = "downloads"
 
-# Initialize the bot
-app = Client("url_uploader_bot", bot_token=BOT_TOKEN, api_id=API_ID, api_hash=API_HASH)
 
-# Ensure download directory exists
-if not os.path.exists(DOWNLOAD_DIR):
-    os.makedirs(DOWNLOAD_DIR)
+# Initialize the Pyrogram Client
+app = Client(
+    "imdb_bot",  # Session name
+    api_id="API_ID",  # Replace with your API ID
+    api_hash="API_HASH",  # Replace with your API hash
+    bot_token="BOT_TOKEN",  # Replace with your bot token
+)
 
-@app.on_message(filters.private & filters.text)
-async def handle_url(client, message):
-    url = message.text.strip()
-    chat_id = message.chat.id
-
-    # Notify the user that the download has started
+def generate_post_from_imdb_link(imdb_url: str) -> str:
+    """Generate a movie post from an IMDb link."""
     try:
-        progress_msg = await message.reply_text("🔄 Starting download...")
+        # Extract IMDb ID from the link
+        imdb_id = imdb_url.split("/title/")[1].split("/")[0].replace("tt", "")
+        # Fetch movie details
+        movie = ia.get_movie(imdb_id)
+        
+        # Generate the post
+        title = movie.get('title', 'Unknown Title')
+        year = movie.get('year', 'Unknown Year')
+        rating = movie.get('rating', 'No Rating')
+        genres = ", ".join(movie.get('genres', []))
+        plot = movie.get('plot outline', 'Plot not available')
+
+        post = (
+            f"🎥 *{title}* ({year})\n"
+            f"⭐ *Rating*: {rating}/10\n"
+            f"📚 *Genres*: {genres}\n"
+            f"📝 *Plot*: {plot}"
+        )
+        return post
     except Exception as e:
-        print(f"Error sending start message: {e}")
+        return f"⚠️ Could not generate post. Error: {e}"
 
-    # Validate URL and download file
-    try:
-        response = requests.get(url, stream=True, timeout=30)
-        response.raise_for_status()  # Check if the URL is accessible
+@app.on_message(filters.command("start"))
+def start_command(client, message):
+    """Handle the /start command."""
+    message.reply_text("Hi! Send me an IMDb link, and I'll generate a post for the movie!")
 
-        # Extract file name from URL or headers
-        file_name = url.split("/")[-1] or "file"
-        file_path = os.path.join(DOWNLOAD_DIR, file_name)
+@app.on_message(filters.text & ~filters.command)
+def handle_message(client, message):
+    """Handle incoming IMDb links."""
+    text = message.text.strip()
 
-        # Download the file with progress updates
-        total_size = int(response.headers.get("content-length", 0))
-        downloaded_size = 0
-        start_time = time.time()
+    # Check if the message contains an IMDb link
+    if "imdb.com/title/" in text:
+        message.reply_text("⏳ Generating post, please wait...")
+        post = generate_post_from_imdb_link(text)
+        message.reply_text(post, parse_mode="markdown")
+    else:
+        message.reply_text("⚠️ Please send a valid IMDb link!")
 
-        with open(file_path, "wb") as file:
-            for chunk in response.iter_content(chunk_size=1024):
-                file.write(chunk)
-                downloaded_size += len(chunk)
-
-                # Update progress every 5 seconds
-                if time.time() - start_time >= 5:
-                    speed = downloaded_size / (time.time() - start_time)
-                    progress_text = (
-                        f"⬇️ Downloading...\n"
-                        f"Downloaded: {downloaded_size / 1024:.2f} KB / {total_size / 1024:.2f} KB\n"
-                        f"Speed: {speed / 1024:.2f} KB/s"
-                    )
-                    try:
-                        await progress_msg.edit_text(progress_text)
-                    except Exception as e:
-                        print(f"Error updating download progress: {e}")
-                    start_time = time.time()  # Reset start time for next update
-
-        await progress_msg.edit_text("✅ File downloaded successfully. Uploading to Telegram...")
-    except requests.exceptions.RequestException as e:
-        await progress_msg.edit_text(f"❌ Failed to download the file. Error: {e}")
-        return
-    except Exception as e:
-        await progress_msg.edit_text(f"❌ Unexpected error: {e}")
-        return
-
-    # Upload the file to Telegram with progress updates
-    try:
-        start_time = time.time()
-        uploaded_size = 0
-
-        async def progress(current, total):
-            nonlocal start_time, uploaded_size
-            uploaded_size = current
-            if time.time() - start_time >= 5:
-                speed = uploaded_size / (time.time() - start_time)
-                progress_text = (
-                    f"⬆️ Uploading...\n"
-                    f"Uploaded: {uploaded_size / 1024:.2f} KB / {total / 1024:.2f} KB\n"
-                    f"Speed: {speed / 1024:.2f} KB/s"
-                )
-                try:
-                    await progress_msg.edit_text(progress_text)
-                except Exception as e:
-                    print(f"Error updating upload progress: {e}")
-                start_time = time.time()  # Reset start time for next update
-
-        await client.send_document(chat_id, file_path, progress=progress)
-        await progress_msg.edit_text("✅ File uploaded to Telegram successfully.")
-    except Exception as e:
-        await progress_msg.edit_text(f"❌ Failed to upload the file to Telegram. Error: {e}")
-    finally:
-        # Cleanup the downloaded file
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-# Start the bot
-print("Bot is running...")
-app.run()
+# Run the bot
+if __name__ == "__main__":
+    print("Bot is running...")
+    app.run()
