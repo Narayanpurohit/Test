@@ -13,9 +13,9 @@ API_HASH = "3037d39233c6fad9b80d83bb8a339a07"
 # Initialize the Pyrogram Client
 app = Client(
     "imdb_bot",  # Session name
-    api_id="API_ID",  # Replace with your API ID
-    api_hash="API_HASH",  # Replace with your API hash
-    bot_token="BOT_TOKEN",  # Replace with your bot token
+    api_id=int(API_ID),  # Replace with your API ID
+    api_hash=API_HASH,  # Replace with your API hash
+    bot_token=BOT_TOKEN,  # Replace with your bot token
 )
 
 def generate_post_from_imdb_link(imdb_url: str) -> str:
