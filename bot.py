@@ -42,7 +42,7 @@ def start_command(client, message):
     """Handle the /start command."""
     message.reply_text("Hi! Send me an IMDb link, and I'll generate a post for the movie!")
 
-@app.on_message(filters.text & ~filters.command)
+@app.on_message(filters.text)
 def handle_message(client, message):
     """Handle incoming IMDb links."""
     text = message.text.strip()
