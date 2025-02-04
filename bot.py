@@ -17,8 +17,12 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
     try:
         # Extract IMDb ID from the link
         imdb_id = imdb_url.split("/title/")[1].split("/")[0].replace("tt", "")
+        
         # Fetch movie details
         movie = ia.get_movie(imdb_id)
+        msg1 = await  app.ask(int(OWNER_ID), "How much money do you want to add? Please provide amount in INR format.")
+        
+         
         
         # Generate the post
         title = movie.get('title', 'Unknown Title')
@@ -28,7 +32,7 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
         plot = movie.get('plot outline', 'Plot not available')
 
         post = (
-            f"🎥 *{title}* ({year})\n"
+            f"<p>🎥 *{title}* ({year})\n"
             f"⭐ *Rating*: {rating}/10\n"
             f"📚 *Genres*: {genres}\n"
             f"📝 *Plot*: {plot}"
@@ -51,6 +55,9 @@ def handle_message(client, message):
     if "imdb.com/title/" in text:
         message.reply_text("⏳ Generating post, please wait...")
         post = generate_post_from_imdb_link(text)
+        msg1 = await app.ask("send me audios list like this \n\nHindi,English,Tamil etc")
+        audios=msg1
+        
         message.reply_text(post)
     else:
         message.reply_text("⚠️ Please send a valid IMDb link!")
