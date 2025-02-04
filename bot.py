@@ -51,7 +51,7 @@ def handle_message(client, message):
     if "imdb.com/title/" in text:
         message.reply_text("⏳ Generating post, please wait...")
         post = generate_post_from_imdb_link(text)
-        message.reply_text(post, parse_mode="markdown")
+        message.reply_text(post)
     else:
         message.reply_text("⚠️ Please send a valid IMDb link!")
 
