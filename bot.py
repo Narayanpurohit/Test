@@ -47,7 +47,7 @@ def start_command(client, message):
     message.reply_text("Hi! Send me an IMDb link, and I'll generate a post for the movie!")
 
 @app.on_message(filters.text)
-def handle_message(client, message):
+async def handle_message(client, message):
     """Handle incoming IMDb links."""
     text = message.text.strip()
 
