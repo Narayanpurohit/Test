@@ -56,9 +56,6 @@ async def handle_message(client, message):
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
         audios = response.text.strip()
-        
-        
-        
         await message.reply_text("⏳ Generating post, please wait...")
         
         post = generate_post_from_imdb_link(text)
