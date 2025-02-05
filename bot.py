@@ -20,7 +20,6 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
         
         # Fetch movie details
         movie = ia.get_movie(imdb_id)
-        msg1 = await  app.ask(int(OWNER_ID), "How much money do you want to add? Please provide amount in INR format.")
         
          
         
