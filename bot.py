@@ -58,7 +58,7 @@ async def handle_message(client, message):
         # Generate the post
         post = generate_post_from_imdb_link(text, audios)
         
-        await message.reply_text(post, parse_mode="markdown")  # Use "markdown" or "MarkdownV2"
+        await message.reply_text(post, parse_mode="MarkdownV2")  # Use "MarkdownV2" or "MarkdownV2V2"
     else:
         await message.reply_text("⚠️ Please send a valid IMDb link!")
 
