@@ -1,3 +1,4 @@
+
 from imdb import Cinemagoer
 from pyrogram import Client, filters
 
@@ -12,16 +13,14 @@ app = Client(
     bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  # Replace with your bot token
 )
 
-def generate_post_from_imdb_link(imdb_url: str) -> str:
+def generate_post_from_imdb_link(imdb_url: str, audios: str) -> str:
     """Generate a movie post from an IMDb link."""
     try:
         # Extract IMDb ID from the link
         imdb_id = imdb_url.split("/title/")[1].split("/")[0].replace("tt", "")
-        audios=audios1
+        
         # Fetch movie details
         movie = ia.get_movie(imdb_id)
-        
-         
         
         # Generate the post
         title = movie.get('title', 'Unknown Title')
@@ -31,9 +30,9 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
         plot = movie.get('plot outline', 'Plot not available')
 
         post = (
-            f"<p>🎥 *{title}* ({year})</p>\n"
+            f"🎥 *{title}* ({year})\n"
             f"⭐ *Rating*: {rating}/10\n"
-            f"⭐ *launguge*: {audios}/10\n"
+            f"🎧 *Languages*: {audios}\n"
             f"📚 *Genres*: {genres}\n"
             f"📝 *Plot*: {plot}"
         )
@@ -55,14 +54,14 @@ async def handle_message(client, message):
     if "imdb.com/title/" in text:
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
-        audios1 = response.text.strip()
-        await message.reply_text("⏳ Generating post, please wait...")
+        audios = response.text.strip()
         
-        post = generate_post_from_imdb_link(text)
+        # Generate the post
+        post = generate_post_from_imdb_link(text, audios)
         
-        await message.reply_text(post)
+        await message.reply_text(post, parse_mode="Markdown")
     else:
-        message.reply_text("⚠️ Please send a valid IMDb link!")
+        await message.reply_text("⚠️ Please send a valid IMDb link!")
 
 # Run the bot
 if __name__ == "__main__":
