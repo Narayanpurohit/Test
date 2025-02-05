@@ -54,12 +54,14 @@ async def handle_message(client, message):
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
         await message.reply_text("Send me the category (e.g., Hollywood, bollywood, anime, etc):")
-        audios = response.text.strip()
+        category = response.text.strip()
         await message.reply_text("Send me the quality here is all qauality ```CAM```\n```HDCAM```\n```TS (Telesync)```\n```HDTS (High-Definition Telesync)\n```WEBRip```\n```WEB-DL```\n```HDTV```\n```PDTV (Pure Digital TV)```\n```DVDScr (DVD Screener)```\n```DVDRip```\n```BDRip```\n```BRRip```\n```REMUX```\n```HDRip```\n```4K UHD BluRay Rip```\n```Lossless (UHD REMUX, UHD ISO)```") 
         response = await client.listen(message.chat.id)
-        audios = response.text.strip()
+        quality = response.text.strip()
+        await message.reply_text("Send me the type (e.g., movie, weseries etc):")
+        
         response = await client.listen(message.chat.id)
-        audios = response.text.strip()
+        type = response.text.strip()
         
         # Generate the post
         post = generate_post_from_imdb_link(text, audios)
