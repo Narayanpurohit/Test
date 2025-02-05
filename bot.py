@@ -55,7 +55,7 @@ async def handle_message(client, message):
     if "imdb.com/title/" in text:
         message.reply_text("⏳ Generating post, please wait...")
         post = generate_post_from_imdb_link(text)
-        msg1 = await app.ask("send me audios list like this \n\nHindi,English,Tamil etc")
+        msg1 = await app.ask(message.from.user_id,"send me audios list like this \n\nHindi,English,Tamil etc")
         audios=msg1
         
         message.reply_text(post)
