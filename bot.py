@@ -32,8 +32,9 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
         plot = movie.get('plot outline', 'Plot not available')
 
         post = (
-            f"<p>🎥 *{title}* ({year})\n"
+            f"<p>🎥 *{title}* ({year})</p>\n"
             f"⭐ *Rating*: {rating}/10\n"
+            f"⭐ *launguge*: {audios}/10\n"
             f"📚 *Genres*: {genres}\n"
             f"📝 *Plot*: {plot}"
         )
