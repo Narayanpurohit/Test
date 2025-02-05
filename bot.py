@@ -59,7 +59,7 @@ async def handle_message(client, message):
         
         
         
-        message.reply_text("⏳ Generating post, please wait...")
+        await message.reply_text("⏳ Generating post, please wait...")
         
         post = generate_post_from_imdb_link(text)
         
