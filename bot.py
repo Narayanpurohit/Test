@@ -69,6 +69,23 @@ async def handle_message(client, message):
         response = await client.listen(message.chat.id)
         type = response.text.strip()
         
+        await message.reply_text("Send me the type (e.g., movie, weseries etc):")
+        
+        response = await client.listen(message.chat.id)
+        
+        links = response.split("\n")  
+        if len(links) < 2:
+            message.reply_text("Please send at least two links.")
+            return
+        html_template = '<p style="text-align: center;">\n'
+        for link in links[1:]:
+              html_template += f'<a href="{link}" target="_blank" rel="noopener">' \
+                         f'<button class="dwd-button"> <i class="fas fa-download"></i> Download Link</button></a>\n'
+        html_template += '</p>'
+
+        await message.reply_text(html_template, quote=True)
+        
+        
         # Generate the post
         post = generate_post_from_imdb_link(text, audios, category, quality, type)
         
