@@ -73,7 +73,7 @@ async def handle_message(client, message):
         
         response = await client.listen(message.chat.id)
         
-        links = response.split("\n")  
+        links = response.text.split("\n")  
         if len(links) < 2:
             message.reply_text("Please send at least two links.")
             return
