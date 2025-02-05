@@ -17,7 +17,7 @@ def generate_post_from_imdb_link(imdb_url: str) -> str:
     try:
         # Extract IMDb ID from the link
         imdb_id = imdb_url.split("/title/")[1].split("/")[0].replace("tt", "")
-        
+        audios=audios1
         # Fetch movie details
         movie = ia.get_movie(imdb_id)
         
@@ -55,7 +55,7 @@ async def handle_message(client, message):
     if "imdb.com/title/" in text:
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
-        audios = response.text.strip()
+        audios1 = response.text.strip()
         await message.reply_text("⏳ Generating post, please wait...")
         
         post = generate_post_from_imdb_link(text)
