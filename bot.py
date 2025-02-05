@@ -61,7 +61,7 @@ async def handle_message(client, message):
         await message.reply_text("Send me the category (e.g., Hollywood, bollywood, anime, etc):")
         response = await client.listen(message.chat.id)
         category = response.text.strip()
-        await message.reply_text("Send me the quality here is all qauality ```CAM```\n```HDCAM```\n```TS (Telesync)```\n```HDTS (High-Definition Telesync)\n```WEBRip```\n```WEB-DL```\n```HDTV```\n```PDTV (Pure Digital TV)```\n```DVDScr (DVD Screener)```\n```DVDRip```\n```BDRip```\n```BRRip```\n```REMUX```\n```HDRip```\n```4K UHD BluRay Rip```\n```Lossless (UHD REMUX, UHD ISO)```") 
+        await message.reply_text("Send me the quality here is all qauality ```CAM```\n```HDCAM```\n```TS (Telesync)```\n```HDTS (High-Definition Telesync)```\n```WEBRip```\n```WEB-DL```\n```HDTV```\n```PDTV (Pure Digital TV)```\n```DVDScr (DVD Screener)```\n```DVDRip```\n```BDRip```\n```BRRip```\n```REMUX```\n```HDRip```\n```4K UHD BluRay Rip```\n```Lossless (UHD REMUX, UHD ISO)```") 
         response = await client.listen(message.chat.id)
         quality = response.text.strip()
         await message.reply_text("Send me the type (e.g., movie, weseries etc):")
