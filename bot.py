@@ -63,7 +63,7 @@ async def handle_message(client, message):
         
         post = generate_post_from_imdb_link(text)
         
-        message.reply_text(post)
+        await message.reply_text(post)
     else:
         message.reply_text("⚠️ Please send a valid IMDb link!")
 
