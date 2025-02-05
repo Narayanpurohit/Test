@@ -53,10 +53,15 @@ async def handle_message(client, message):
 
     # Check if the message contains an IMDb link
     if "imdb.com/title/" in text:
+        await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
+        response = await client.listen(message.chat.id)
+        audios = response.text.strip()
+        
+        
+        
         message.reply_text("⏳ Generating post, please wait...")
+        
         post = generate_post_from_imdb_link(text)
-        msg1 = await app.ask(message.from.user_id,"send me audios list like this \n\nHindi,English,Tamil etc")
-        audios=msg1
         
         message.reply_text(post)
     else:
