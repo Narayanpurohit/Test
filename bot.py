@@ -29,11 +29,15 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str) -> str:
         plot = movie.get('plot outline', 'Plot not available')
 
         post = (
-            f"🎥 *{title}* ({year})\n"
+            f"<p>🎥 *{title}* ({year})\n</p>"
             f"⭐ *Rating*: {rating}/10\n"
             f"🎧 *Languages*: {audios}\n"
             f"📚 *Genres*: {genres}\n"
+            f"📝 *test*: {category}"
+            f"📝 *test*: {quality}"
+            f"📝 *test*: {type}"
             f"📝 *Plot*: {plot}"
+            
         )
         return post
     except Exception as e:
