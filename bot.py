@@ -53,6 +53,12 @@ async def handle_message(client, message):
     if "imdb.com/title/" in text:
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
+        await message.reply_text("Send me the category (e.g., Hollywood, bollywood, anime, etc):")
+        audios = response.text.strip()
+        await message.reply_text("Send me the quality here is all qauality ```CAM```\n```HDCAM```\n```TS (Telesync)```\n```HDTS (High-Definition Telesync)\n```WEBRip```\n```WEB-DL```\n```HDTV```\n```PDTV (Pure Digital TV)```\n```DVDScr (DVD Screener)```\n```DVDRip```\n```BDRip```\n```BRRip```\n```REMUX```\n```HDRip```\n```4K UHD BluRay Rip```\n```Lossless (UHD REMUX, UHD ISO)```") 
+        response = await client.listen(message.chat.id)
+        audios = response.text.strip()
+        response = await client.listen(message.chat.id)
         audios = response.text.strip()
         
         # Generate the post
