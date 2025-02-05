@@ -12,7 +12,7 @@ app = Client(
     bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  # Replace with your bot token
 )
 
-def generate_post_from_imdb_link(imdb_url: str, audios: str) -> str:
+def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, type: str) -> str:
     """Generate a movie post from an IMDb link."""
     try:
         # Extract IMDb ID from the link
@@ -57,7 +57,9 @@ async def handle_message(client, message):
     if "imdb.com/title/" in text:
         await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
         response = await client.listen(message.chat.id)
+        audios = response.text.strip()
         await message.reply_text("Send me the category (e.g., Hollywood, bollywood, anime, etc):")
+        response = await client.listen(message.chat.id)
         category = response.text.strip()
         await message.reply_text("Send me the quality here is all qauality ```CAM```\n```HDCAM```\n```TS (Telesync)```\n```HDTS (High-Definition Telesync)\n```WEBRip```\n```WEB-DL```\n```HDTV```\n```PDTV (Pure Digital TV)```\n```DVDScr (DVD Screener)```\n```DVDRip```\n```BDRip```\n```BRRip```\n```REMUX```\n```HDRip```\n```4K UHD BluRay Rip```\n```Lossless (UHD REMUX, UHD ISO)```") 
         response = await client.listen(message.chat.id)
@@ -68,7 +70,7 @@ async def handle_message(client, message):
         type = response.text.strip()
         
         # Generate the post
-        post = generate_post_from_imdb_link(text, audios)
+        post = generate_post_from_imdb_link(text, audios, category, quality, type)
         
         await message.reply_text(post)  
     else:
