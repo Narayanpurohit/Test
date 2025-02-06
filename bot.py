@@ -1,3 +1,4 @@
+import os
 from imdb import Cinemagoer
 from pyrogram import Client, filters
 
@@ -83,11 +84,20 @@ async def handle_message(client, message):
                          f'<button class="dwd-button"> <i class="fas fa-download"></i> Download Link</button></a>\n'
         html_template += '</p>'
 
-        await message.reply_text(html_template, quote=True)
-        
         
         # Generate the post
         post = generate_post_from_imdb_link(text, audios, category, quality, type)
+        html_template2=str(html_template+post)
+        file_path = "/download_links.txt"
+        with open(file_path, "w", encoding="utf-8") as file:
+        file.write(html_template2)
+        await client.send_document(
+        chat_id=message.chat.id,
+        document=file_path,
+        caption="Here is your download links file.")
+        os.remove(file_path)
+    
+        
         
         await message.reply_text(post)  
     else:
