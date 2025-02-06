@@ -108,7 +108,9 @@ async def handle_message(client, message):
 
         screenshots = screenshots_response.split("\n")
         if len(screenshots) < 2:
+            await m.delete()
             await message.reply_text("⚠️ Please send at least two screenshot links.")
+            
             return
         
         # Generate HTML for screenshots
@@ -142,6 +144,7 @@ async def handle_message(client, message):
                 )
             else:
                 await message.reply_text(f"⚠️ Invalid format in: `{line}`. Skipping this line.")
+                await m.delete()
 
         # Final HTML content
         html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html  
@@ -158,7 +161,8 @@ async def handle_message(client, message):
             document=file_path,
             caption="Here is your movie details file."
         )
-        await m.delete()
+        try:
+           await m.delete()
 
         # Delete the file after sending
         
