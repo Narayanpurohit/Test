@@ -32,7 +32,14 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
         year = movie.get('year', 'Unknown Year')
         rating = movie.get('rating', 'No Rating')
         genres = ", ".join(movie.get('genres', []))
-        plot = movie.get('plot', ['Plot not available'])[0]  # Fix plot extraction
+        plot = movie.get('plot', ['Plot not available'])[0]# Fix plot extraction
+        cast_list = ", ".join([cast['name'] for cast in movie.get('cast', [])[:5]]) or "N/A"
+        
+        # Extract writers (Top 3)
+        writers = ", ".join([writer['name'] for writer in movie.get('writer', [])[:3]]) or "N/A"
+        
+        # Extract directors (Top 3)
+        directors = ", ".join([director['name'] for director in movie.get('director', [])[:3]]) or "N/A"
 
         post = (
             f"""<p>{title} (year) is now ready for you to Download in {quality}quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>
@@ -44,7 +51,7 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
 
 <strong>Movie Name:</strong> {title}
 <strong>Release Year:</strong> {year}
-<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audio} </strong></span>
+<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audios} </strong></span>
 <strong>Genres:</strong> {genres}
 <strong>Rating:</strong> {rating}
 <strong>Cast:</strong> {cast_list}
