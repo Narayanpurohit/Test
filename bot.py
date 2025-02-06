@@ -78,6 +78,17 @@ async def handle_message(client, message):
         await message.reply_text("Now send me the screenshot links (each on a new line):")
         screenshots_response = (await client.listen(message.chat.id)).text.strip()
 
+        
+        # Generate IMDb Post
+        
+        # Ask for download links
+        await message.reply_text(
+            "Now send me the download links in this format:\n"
+            "`Resolution | Size | Download Link | Stream Link`\n"
+            "You can send multiple lines for multiple links."
+        )
+        download_response = (await client.listen(message.chat.id)).text.strip()
+
         screenshots = screenshots_response.split("\n")
         if len(screenshots) < 2:
             await message.reply_text("⚠️ Please send at least two screenshot links.")
@@ -89,16 +100,7 @@ async def handle_message(client, message):
             screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
         screenshots_html += '</ul></div></div>'
 
-        # Generate IMDb Post
         post, title, year = generate_post_from_imdb_link(text, audios, category, quality, media_type)
-
-        # Ask for download links
-        await message.reply_text(
-            "Now send me the download links in this format:\n"
-            "`Resolution | Size | Download Link | Stream Link`\n"
-            "You can send multiple lines for multiple links."
-        )
-        download_response = (await client.listen(message.chat.id)).text.strip()
 
         # Process download links
         download_links = download_response.split("\n")
