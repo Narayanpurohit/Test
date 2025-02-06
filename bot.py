@@ -161,8 +161,8 @@ async def handle_message(client, message):
             document=file_path,
             caption="Here is your movie details file."
         )
-        try:
-           await m.delete()
+        
+        await m.delete()
 
         # Delete the file after sending
         
