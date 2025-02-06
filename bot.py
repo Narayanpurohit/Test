@@ -13,6 +13,7 @@ app = Client(
     bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  # Replace with your bot token
     )
 
+
 def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, media_type: str) -> str:
     """Generate a movie post from an IMDb link."""
     try:
@@ -42,9 +43,9 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
             f"📝 <b>Type:</b> {media_type}\n"
             f"📝 <b>Plot:</b> {plot}"
         )
-        return post
+        return post, title, year  # Return title and year for use in download links
     except Exception as e:
-        return f"⚠️ Could not generate post. Error: {e}"
+        return f"⚠️ Could not generate post. Error: {e}", "Unknown", "Unknown"
 
 @app.on_message(filters.command("start"))
 async def start_command(client, message):
@@ -73,24 +74,58 @@ async def handle_message(client, message):
         await message.reply_text("Send me the type (e.g., Movie, Web Series, etc.):")
         media_type = (await client.listen(message.chat.id)).text.strip()
 
-        # Ask for links
-        await message.reply_text("Now send me the links (each on a new line):")
-        links_response = (await client.listen(message.chat.id)).text.strip()
+        # Ask for screenshot links
+        await message.reply_text("Now send me the screenshot links (each on a new line):")
+        screenshots_response = (await client.listen(message.chat.id)).text.strip()
 
-        links = links_response.split("\n")
-        if len(links) < 2:
-            await message.reply_text("⚠️ Please send at least two links.")
+        screenshots = screenshots_response.split("\n")
+        if len(screenshots) < 2:
+            await message.reply_text("⚠️ Please send at least two screenshot links.")
             return
         
-        # Generate HTML download buttons
-        html_template = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
-        for link in links[1:]:
-            html_template += f'<li class="neoss"><img src="{link}" /></li>\n'
-        html_template += '</ul></div></div>'
+        # Generate HTML for screenshots
+        screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
+        for link in screenshots[1:]:
+            screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
+        screenshots_html += '</ul></div></div>'
 
         # Generate IMDb Post
-        post = generate_post_from_imdb_link(text, audios, category, quality, media_type)
-        html_content = post + "\n\n" + html_template  # Combine HTML + Post
+        post, title, year = generate_post_from_imdb_link(text, audios, category, quality, media_type)
+
+        # Ask for download links
+        await message.reply_text(
+            "Now send me the download links in this format:\n"
+            "`Resolution | Size | Download Link | Stream Link`\n"
+            "You can send multiple lines for multiple links."
+        )
+        download_response = (await client.listen(message.chat.id)).text.strip()
+
+        # Process download links
+        download_links = download_response.split("\n")
+        download_html = ""
+
+        for line in download_links:
+            parts = line.split("|")
+            if len(parts) == 4:
+                resolution = parts[0].strip()
+                size = parts[1].strip()
+                dl_link = parts[2].strip()
+                stream_link = parts[3].strip()
+
+                download_html += (
+                    f'<h6 style="text-align: center;"><strong>'
+                    f'<span style="color: #fff;">{title} ({year}) {audios} {resolution} {quality} [{size}]</span></strong></h6>\n'
+                    f'<p style="text-align: center;">'
+                    f'<a href="{dl_link}" target="_blank" rel="noopener">'
+                    f'<button class="dwd-button"> <i class="fas fa-download"></i> Download Link</button></a>\n'
+                    f'<a href="{stream_link}" target="_blank" rel="noopener">'
+                    f'<button class="dwd-button"> <i class="fas fa-play"></i> Stream Link</button></a></p>\n'
+                )
+            else:
+                await message.reply_text(f"⚠️ Invalid format in: `{line}`. Skipping this line.")
+
+        # Final HTML content
+        html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html  
 
         # Save to a .html file
         file_path = "movie_details.html"
