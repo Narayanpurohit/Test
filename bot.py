@@ -33,13 +33,9 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
         rating = movie.get('rating', 'No Rating')
         genres = ", ".join(movie.get('genres', []))
         plot = movie.get('plot', ['Plot not available'])[0]# Fix plot extraction
-        cast_list = ", ".join([cast['name'] for cast in movie.get('cast', [])[:5]]) or "N/A"
-        
-        # Extract writers (Top 3)
-        writers = ", ".join([writer['name'] for writer in movie.get('writer', [])[:3]]) or "N/A"
-        
-        # Extract directors (Top 3)
-        directors = ", ".join([director['name'] for director in movie.get('director', [])[:3]]) or "N/A"
+        cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
+        writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
+        directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
 
         post = (
             f"""<p>{title} (year) is now ready for you to Download in {quality}quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>
