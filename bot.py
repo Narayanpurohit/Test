@@ -34,14 +34,29 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
         plot = movie.get('plot', ['Plot not available'])[0]  # Fix plot extraction
 
         post = (
-            f"<b>🎥 {title} ({year})</b>\n"
-            f"⭐ <b>Rating:</b> {rating}/10\n"
-            f"🎧 <b>Languages:</b> {audios}\n"
-            f"📚 <b>Genres:</b> {genres}\n"
-            f"📝 <b>Category:</b> {category}\n"
-            f"📝 <b>Quality:</b> {quality}\n"
-            f"📝 <b>Type:</b> {media_type}\n"
-            f"📝 <b>Plot:</b> {plot}"
+            f"""<p>{title} (year) is now ready for you to Download in {qality}quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {imdb-genres} with this Movie.</p>
+<p>
+<span style="color: #339966;"><strong><a style="color: #339966;" href="/">jnmovies </a></strong></span> is your one-stop destination for the latest top-quality Movies, Web Series, and Anime. We provide hassle-free Direct or Google Drive download links for a quick and secure experience. Just click the download button below and follow the simple steps to get your File. Get ready for an unforgettable cinematic experience</p>
+
+[imdb style="dark"]{Imdb_id}[/imdb]
+<h5 style="text-align: center;"><span style="font-family: arial black, sans-serif; color: #eef425;"><strong><strong>{title} ({year})- Movie Download </strong> jnmovies </strong></span></h5>
+
+<strong>Movie Name:</strong> {title}
+<strong>Release Year:</strong> {year}
+<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audio} </strong></span>
+<strong>Genres:</strong> {genres}
+<strong>Rating:</strong> {rating}
+<strong>Cast:</strong> {cast_list}
+<strong>Writer:</strong> {writers}
+<strong>Director:</strong> {directors}
+<strong>Source:</strong> {quality}
+<strong>Subtitle:</strong> YES / English
+<strong>Format:</strong> MKV
+
+
+<h4 style="text-align: center;"><span style="color: #eef425;">Storyline:</span></h4><p>
+{plot}</p>"""
+            
         )
         return post, title, year  # Return title and year for use in download links
     except Exception as e:
@@ -88,6 +103,8 @@ async def handle_message(client, message):
             "You can send multiple lines for multiple links."
         )
         download_response = (await client.listen(message.chat.id)).text.strip()
+        
+        m=await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE") 
 
         screenshots = screenshots_response.split("\n")
         if len(screenshots) < 2:
@@ -135,13 +152,16 @@ async def handle_message(client, message):
             file.write(html_content)
 
         # Send the file
+        
         await client.send_document(
             chat_id=message.chat.id,
             document=file_path,
             caption="Here is your movie details file."
         )
+        await m.delete()
 
         # Delete the file after sending
+        
         os.remove(file_path)
 
     else:
