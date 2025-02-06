@@ -2,17 +2,16 @@ import os
 import re
 from imdb import Cinemagoer
 from pyrogram import Client, filters
-
 # Initialize IMDbPY
 ia = Cinemagoer()
 
 # Initialize the Pyrogram Client
 app = Client(
     "imdb_bot",
-    api_id=YOUR_API_ID,  # Replace with your API ID
-    api_hash="YOUR_API_HASH",  # Replace with your API hash
-    bot_token="YOUR_BOT_TOKEN",  # Replace with your bot token
-)
+    api_id=15191874,  # Replace with your API ID
+    api_hash="3037d39233c6fad9b80d83bb8a339a07",  # Replace with your API hash
+    bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  # Replace with your bot token
+    )
 
 def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, media_type: str) -> str:
     """Generate a movie post from an IMDb link."""
