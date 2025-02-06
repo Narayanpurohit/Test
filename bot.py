@@ -30,17 +30,17 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
         year = movie.get('year', 'Unknown Year')
         rating = movie.get('rating', 'No Rating')
         genres = ", ".join(movie.get('genres', []))
-        plot = movie.get('plot outline', 'Plot not available')
+        plot = movie.get('plot', ['Plot not available'])[0]  # Fix plot extraction
 
         post = (
-            f"<p>🎥 *{title}* ({year})</p>\n"
-            f"⭐ *Rating*: {rating}/10\n"
-            f"🎧 *Languages*: {audios}\n"
-            f"📚 *Genres*: {genres}\n"
-            f"📝 *Category*: {category}\n"
-            f"📝 *Quality*: {quality}\n"
-            f"📝 *Type*: {media_type}\n"
-            f"📝 *Plot*: {plot}"
+            f"<b>🎥 {title} ({year})</b>\n"
+            f"⭐ <b>Rating:</b> {rating}/10\n"
+            f"🎧 <b>Languages:</b> {audios}\n"
+            f"📚 <b>Genres:</b> {genres}\n"
+            f"📝 <b>Category:</b> {category}\n"
+            f"📝 <b>Quality:</b> {quality}\n"
+            f"📝 <b>Type:</b> {media_type}\n"
+            f"📝 <b>Plot:</b> {plot}"
         )
         return post
     except Exception as e:
@@ -83,20 +83,17 @@ async def handle_message(client, message):
             return
         
         # Generate HTML download buttons
-        html_template = '<p style="text-align: center;">\n'
+        html_template = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
         for link in links[1:]:
-            html_template += (
-                f'<a href="{link}" target="_blank" rel="noopener">'
-                f'<button class="dwd-button"> <i class="fas fa-download"></i> Download Link</button></a>\n'
-            )
-        html_template += '</p>'
+            html_template += f'<li class="neoss"><img src="{link}" /></li>\n'
+        html_template += '</ul></div></div>'
 
         # Generate IMDb Post
         post = generate_post_from_imdb_link(text, audios, category, quality, media_type)
-        html_content = html_template + "\n\n" + post  # Combine HTML + Post
+        html_content = post + "\n\n" + html_template  # Combine HTML + Post
 
-        # Save to a .txt file
-        file_path = "download_links.txt"
+        # Save to a .html file
+        file_path = "movie_details.html"
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(html_content)
 
@@ -104,7 +101,7 @@ async def handle_message(client, message):
         await client.send_document(
             chat_id=message.chat.id,
             document=file_path,
-            caption="Here is your download links file."
+            caption="Here is your movie details file."
         )
 
         # Delete the file after sending
