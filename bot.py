@@ -1,142 +1,149 @@
 import os
 import re
+import pymongo
+from motor.motor_asyncio import AsyncIOMotorClient
 from imdb import Cinemagoer
 from pyrogram import Client, filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# Initialize IMDbPY
+# ✅ Import configuration from config.py
+from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE
+
+# 🔹 MongoDB Setup
+client_mongo = AsyncIOMotorClient(MONGO_URI)
+db = client_mongo[DB_NAME]
+users_collection = db[COLLECTION_NAME]
+
+# 🔹 IMDbPY Setup
 ia = Cinemagoer()
 
-# Initialize the Pyrogram Client
+# 🔹 Pyrogram Bot Setup
 app = Client(
     "imdb_bot",
-    api_id=15191874, 
-    api_hash="3037d39233c6fad9b80d83bb8a339a07", 
-    bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  
+    api_id=API_ID,
+    api_hash=API_HASH,
+    bot_token=BOT_TOKEN,
 )
 
-def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, media_type: str):
-    """Generate a movie post from an IMDb link."""
-    try:
-        # Extract IMDb ID using regex
-        imdb_id_match = re.search(r'tt(\d+)', imdb_url)
-        imdb_id = imdb_id_match.group(1) if imdb_id_match else None
-        if not imdb_id:
-            return "⚠️ Invalid IMDb link!", "Unknown", "Unknown"
 
-        # Fetch movie details
-        movie = ia.get_movie(imdb_id)
+async def get_user_data(user_id):
+    """Fetch user data from MongoDB or create a new entry."""
+    user = await users_collection.find_one({"user_id": user_id})
+    if not user:
+        user = {
+            "user_id": user_id,
+            "post_template": DEFAULT_POST_TEMPLATE,
+            "footer_template": DEFAULT_FOOTER_TEMPLATE
+        }
+        await users_collection.insert_one(user)
+    return user
 
-        # Extract details safely
-        title = movie.get('title', 'Unknown Title')
-        year = movie.get('year', 'Unknown Year')
-        rating = movie.get('rating', 'No Rating')
-        genres = ", ".join(movie.get('genres', []))
-        plot = movie.get('plot', ['Plot not available'])[0]
 
-        # Extract cast, writers, and directors safely
-        cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
-        writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
-        directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
+@app.on_message(filters.command("start"))
+async def start_command(client, message):
+    """Handle the /start command."""
+    user_id = message.from_user.id
+    await get_user_data(user_id)  # Ensure user is stored in the database
+    await message.reply_text("Hi! Use /newpost to generate a movie post!")
 
-        # Format post using the new template
-        post = f"""
-<p>{title} ({year}) is now ready for you to Download in {quality} quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>
 
-<p>
-<span style="color: #339966;"><strong><a style="color: #339966;" href="/">jnmovies </a></strong></span> is your one-stop destination for the latest top-quality Movies, Web Series, and Anime. We provide hassle-free Direct or Google Drive download links for a quick and secure experience. Just click the download button below and follow the simple steps to get your File. Get ready for an unforgettable cinematic experience.
-</p>
+@app.on_message(filters.command("newpost"))
+async def newpost_command(client, message):
+    """Start new post creation."""
+    user_id = message.from_user.id
+    await message.reply_text("🎬 Send me the **IMDb link**:")
+    imdb_link = (await client.listen(message.chat.id)).text.strip()
 
-[imdb style="dark"]{imdb_id}[/imdb]
+    await collect_post_details(client, message, user_id, imdb_link)
 
-<h5 style="text-align: center;">
-<span style="font-family: arial black, sans-serif; color: #eef425;">
-<strong>{title} ({year}) - Movie Download</strong> jnmovies
-</span></h5>
 
-<strong>Movie Name:</strong> {title}<br>
-<strong>Release Year:</strong> {year}<br>
-<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audios}</strong></span><br>
-<strong>Genres:</strong> {genres}<br>
-<strong>Rating:</strong> {rating}<br>
-<strong>Cast:</strong> {cast_list}<br>
-<strong>Writer:</strong> {writers}<br>
-<strong>Director:</strong> {directors}<br>
-<strong>Source:</strong> {quality}<br>
+async def collect_post_details(client, message, user_id, imdb_link):
+    """Collect all post details step by step."""
 
-<h4 style="text-align: center;">
-<span style="color: #eef425;">Storyline:</span></h4>
-<p>{plot}</p>
-"""
-        return post, title, year
-    except Exception as e:
-        return f"⚠️ Could not generate post. Error: {e}", "Unknown", "Unknown"
+    # Step 1: Ask for Audio Language
+    await message.reply_text("🎧 Send me the **Audio Languages** (e.g., Hindi, English, Tamil):")
+    audio_languages = (await client.listen(message.chat.id)).text.strip()
 
-@app.on_message(filters.text)
-async def handle_message(client, message):
-    """Handle incoming IMDb links."""
-    text = message.text.strip()
+    # Step 2: Ask for Category
+    await message.reply_text("🎭 Send me the **Category** (e.g., Hollywood, Bollywood, Anime, etc.):")
+    category = (await client.listen(message.chat.id)).text.strip()
 
-    if "imdb.com/title/" in text:
-        # Ask user for inputs
-        await message.reply_text("Send me the audio languages (e.g., Hindi, English, Tamil):")
-        audios = (await client.listen(message.chat.id)).text.strip()
+    # Step 3: Ask for Quality
+    await message.reply_text(
+        "🎞 Send me the **Quality** (Choose from below):\n"
+        "`CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless`"
+    )
+    quality = (await client.listen(message.chat.id)).text.strip()
 
-        await message.reply_text("Send me the category (e.g., Hollywood, Bollywood, Anime, etc.):")
-        category = (await client.listen(message.chat.id)).text.strip()
+    # Step 4: Ask for Post Type
+    await message.reply_text("📌 Send me the **Post Type** (e.g., Movie, Web Series, etc.):")
+    post_type = (await client.listen(message.chat.id)).text.strip()
 
-        await message.reply_text(
-            "Send me the quality (Choose from below):\n"
-            "`CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless`"
-        )
-        quality = (await client.listen(message.chat.id)).text.strip()
+    # Step 5: Ask for Screenshot Links
+    await message.reply_text("🖼 Send me the **Screenshot Links** (each on a new line):")
+    screenshots = (await client.listen(message.chat.id)).text.strip().split("\n")
 
-        # Ask for screenshot links
-        await message.reply_text("Now send me the screenshot links (each on a new line):")
-        screenshots_response = (await client.listen(message.chat.id)).text.strip()
-        screenshots = screenshots_response.split("\n")
+    # Step 6: Ask for Download & Stream Links
+    await message.reply_text("🔗 Send the **Download Links** in this format:\n"
+                             "`Resolution | Size | Download Link | Stream Link`\n"
+                             "You can send multiple lines.")
+    download_links = (await client.listen(message.chat.id)).text.strip().split("\n")
 
-        if len(screenshots) < 2:
-            await message.reply_text("⚠️ Please send at least two screenshot links.")
-            return
+    # Now generate the post
+    await generate_post(client, message, user_id, imdb_link, audio_languages, category, quality, post_type, screenshots, download_links)
 
-        # Generate HTML for screenshots
-        screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
-        for link in screenshots:
-            screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
-        screenshots_html += '</ul></div></div>'
 
-        post, title, year = generate_post_from_imdb_link(text, audios, category, quality, "Movie")
+async def generate_post(client, message, user_id, imdb_url, audio_languages, category, quality, post_type, screenshots, download_links):
+    """Generate a post using all collected details."""
 
-        # Process download links
-        await message.reply_text("Send me the download links (`Resolution | Size | Download Link | Stream Link`):")
-        download_response = (await client.listen(message.chat.id)).text.strip()
-        download_links = download_response.split("\n")
+    # Get user templates
+    user = await get_user_data(user_id)
+    post_template = user["post_template"]
+    footer_template = user["footer_template"]
 
-        download_html = ""
-        for line in download_links:
-            parts = line.split("|")
-            if len(parts) == 4:
-                resolution, size, dl_link, stream_link = map(str.strip, parts)
-                download_html += (
-                    f'<h6 style="text-align: center;"><strong>'
-                    f'<span style="color: #fff;">{title} ({year}) {audios} {resolution} {quality} [{size}]</span></strong></h6>\n'
-                    f'<p style="text-align: center;">'
-                    f'<a href="{dl_link}" target="_blank"><button>Download</button></a>\n'
-                    f'<a href="{stream_link}" target="_blank"><button>Stream</button></a></p>\n'
-                )
+    # Extract IMDb ID
+    imdb_id_match = re.search(r'tt(\d+)', imdb_url)
+    imdb_id = imdb_id_match.group(1) if imdb_id_match else None
+    if not imdb_id:
+        await message.reply_text("⚠️ Invalid IMDb link!")
+        return
 
-        footer = '<hr /><p style="text-align: center;">Keep Visiting and Supporting Us! ❣️</p>'
-        html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer
+    # Fetch movie details
+    movie = ia.get_movie(imdb_id)
+    title = movie.get('title', 'Unknown Title')
+    year = movie.get('year', 'Unknown Year')
+    genres = ", ".join(movie.get('genres', []))
+    plot = movie.get('plot', ['Plot not available'])[0]
 
-        with open("movie_details.html", "w", encoding="utf-8") as file:
-            file.write(html_content)
+    # Generate Screenshot Links in HTML
+    screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
+    for link in screenshots:
+        screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
+    screenshots_html += '</ul></div></div>'
 
-        await client.send_document(message.chat.id, "movie_details.html", caption="Here is your movie details file.")
-        os.remove("movie_details.html")
+    # Generate Download Buttons
+    download_html = ""
+    for line in download_links:
+        parts = line.split("|")
+        if len(parts) == 4:
+            resolution, size, dl_link, stream_link = map(str.strip, parts)
+            download_html += f'<h6 style="text-align: center;"><strong>{title} ({year}) {resolution} [{size}]</strong></h6>\n'
+            download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
-    else:
-        await message.reply_text("⚠️ Please send a valid IMDb link!")
-        
+    # Fill the template
+    post = post_template.format(title=title, year=year, genres=genres, plot=plot)
+    html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
+
+    # Save to a .html file
+    file_path = "movie_details.html"
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(html_content)
+
+    await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
+    os.remove(file_path)
+
+
+# Run the bot
 if __name__ == "__main__":
     print("Bot is running...")
     app.run()
