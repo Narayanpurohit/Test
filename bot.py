@@ -156,9 +156,9 @@ async def settings_command(client, message):
     await get_user_data(user_id)  # Ensure user data exists
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📄 Post Template", callback_data="view_post_template")],[
-        [InlineKeyboardButton("📄 Footer Template", callback_data="view_footer_template")]
-    ])
+    [InlineKeyboardButton("📄 Post Template", callback_data="view_post_template")],
+    [InlineKeyboardButton("📄 Footer Template", callback_data="view_footer_template")]
+])
 
     await message.reply_text("⚙️ **Settings**\n\nCustomize your post template:", reply_markup=keyboard)
 
@@ -175,8 +175,9 @@ async def view_post_template(client, query):
         file.write(post_template)
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("✏ Change Template", callback_data="change_post_template")],[InlineKeyboardButton("Home", callback_data="home")]
-    ])
+    [InlineKeyboardButton("✏ Change Template", callback_data="change_post_template")],
+    [InlineKeyboardButton("Home", callback_data="home")]
+])
 
     await client.send_document(user_id, file_path, caption="📄 **Your Current Post Template**")
     await query.message.reply_text("Would you like to change your post template?", reply_markup=keyboard)
