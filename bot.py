@@ -131,7 +131,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
             download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
     # Fill the template
-    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type )
+    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id )
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
     # Save to a .html file
