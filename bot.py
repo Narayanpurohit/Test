@@ -188,10 +188,21 @@ async def view_post_template(client, query):
 async def change_post_template(client, query):
     """Ask user to send a new post template."""
     user_id = query.from_user.id
+
     await client.send_message(user_id, "📄 Send me your new post template:")
-    new_template=await client.listen(user_id).text.strip()
-    await users_collection.update_one({"user_id": user_id}, {"$set": {"post_template": new_template}})
-    await message.reply_text("✅ Your post template has been updated successfully!")
+    
+    # Listen for the next message from the user
+    new_template_msg = await client.listen(user_id)
+    new_template = new_template_msg.text.strip()
+
+    # Update template in MongoDB
+    await users_collection.update_one(
+        {"user_id": user_id}, 
+        {"$set": {"post_template": new_template}}, 
+        upsert=True  # Ensures entry exists
+    )
+
+    await client.send_message(user_id, "✅ Your post template has been updated successfully!")
 
     
     
