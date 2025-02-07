@@ -60,9 +60,9 @@ async def newpost_command(client, message):
 async def collect_post_details(client, message, user_id, imdb_link):
     """Collect all post details step by step."""
 
-    # Step 1: Ask for Audio Language
-    await message.reply_text("🎧 Send me the **Audio Languages** (e.g., Hindi, English, Tamil):")
-    audio = (await client.listen(message.chat.id)).text.strip()
+    # Step 1: Ask for audios Language
+    await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
+    audios = (await client.listen(message.chat.id)).text.strip()
 
     # Step 2: Ask for Category
     await message.reply_text("🎭 Send me the **Category** (e.g., Hollywood, Bollywood, Anime, etc.):")
@@ -90,10 +90,10 @@ async def collect_post_details(client, message, user_id, imdb_link):
     download_links = (await client.listen(message.chat.id)).text.strip().split("\n")
 
     # Now generate the post
-    await generate_post(client, message, user_id, imdb_link, audio, category, quality, post_type, screenshots, download_links)
+    await generate_post(client, message, user_id, imdb_link, audios, category, quality, post_type, screenshots, download_links)
 
 
-async def generate_post(client, message, user_id, imdb_url, audio, category, quality, post_type, screenshots, download_links):
+async def generate_post(client, message, user_id, imdb_url, audios, category, quality, post_type, screenshots, download_links):
     """Generate a post using all collected details."""
 
     # Get user templates
@@ -131,7 +131,7 @@ async def generate_post(client, message, user_id, imdb_url, audio, category, qua
             download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
     # Fill the template
-    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audio=audio)
+    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios)
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
     # Save to a .html file
