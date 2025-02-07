@@ -109,6 +109,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     movie = ia.get_movie(imdb_id)
     poster_url = movie.get('cover url', 'No poster available')
+    print=(poster_url)
     title = movie.get('title', 'Unknown Title')
     rating = movie.get('rating', 'No Rating')
     year = movie.get('year', 'Unknown Year')
