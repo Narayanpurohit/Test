@@ -10,8 +10,8 @@ ia = Cinemagoer()
 app = Client(
     "imdb_bot",
     api_id=15191874, 
-api_hash="3037d39233c6fad9b80d83bb8a339a07", 
-bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  
+    api_hash="3037d39233c6fad9b80d83bb8a339a07", 
+    bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  
 )
 
 def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, media_type: str):
