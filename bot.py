@@ -188,7 +188,8 @@ async def change_post_template(client, query):
     """Ask user to send a new post template."""
     user_id = query.from_user.id
     await client.send_message(user_id, "📄 Send me your new post template:")
-    await users_collection.update_one({"user_id": user_id}, {"$set": {"post_template": message.text.strip()}})
+    new_template=await client.listen(message.chat.id)).text.strip()
+    await users_collection.update_one({"user_id": user_id}, {"$set": {"post_template": new_template}})
     await message.reply_text("✅ Your post template has been updated successfully!")
 
     
