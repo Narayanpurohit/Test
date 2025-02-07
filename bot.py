@@ -10,10 +10,9 @@ ia = Cinemagoer()
 app = Client(
     "imdb_bot",
     api_id=15191874, 
-    api_hash="3037d39233c6fad9b80d83bb8a339a07", 
-    bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  
+api_hash="3037d39233c6fad9b80d83bb8a339a07", 
+bot_token="7481801715:AAHo9aeMFR9lK8pwxB5-N_D2zLt5NIVvF2s",  
 )
-
 
 def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, quality: str, media_type: str):
     """Generate a movie post from an IMDb link."""
@@ -85,7 +84,10 @@ async def handle_message(client, message):
         await message.reply_text("Send me the category (e.g., Hollywood, Bollywood, Anime, etc.):")
         category = (await client.listen(message.chat.id)).text.strip()
 
-        await message.reply_text("Send me the quality:")
+        await message.reply_text(
+            "Send me the quality (Choose from below):\n"
+            "`CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless`"
+        )
         quality = (await client.listen(message.chat.id)).text.strip()
 
         # Ask for screenshot links
