@@ -4,7 +4,7 @@
 # 🔹 Bot Credentials
 API_ID = 15191874  # Replace with your API ID
 API_HASH = "3037d39233c6fad9b80d83bb8a339a07"  # Replace with your API hash
-BOT_TOKEN = "6677023637:AAFWgnwC7FVHV57mGlMRBusZqNFnV6nVktM"  # Replace with your bot token
+BOT_TOKEN = "6677023637:AAES7_yErqBDZY7wQP1EOyIGhpAN1d9fY5o"  # Replace with your bot token
 
 # 🔹 MongoDB Connection
 MONGO_URI = "mongodb+srv://jnbots76:jacIjUcT5DBeBCdM@cluster0.tsrup.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"  # Change if using cloud MongoDB
