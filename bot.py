@@ -161,6 +161,67 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
     os.remove(file_path)
 
+
+
+@app.on_message(filters.command("settings"))
+async def settings_command(client, message):
+    """Send user settings with inline buttons."""
+    user_id = message.from_user.id
+    await get_user_data(user_id)  # Ensure user data exists
+
+    keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("📄 Post Template", callback_data="view_post_template")],
+    [InlineKeyboardButton("📄 Footer Template", callback_data="view_footer_template")]
+])
+
+    await message.reply_text("⚙️ **Settings**\n\nCustomize your post template:", reply_markup=keyboard)
+
+@app.on_callback_query(filters.regex("view_post_template"))
+async def view_post_template(client, query):
+    """Send current post template and provide an option to change it."""
+    user_id = query.from_user.id
+    user = await get_user_data(user_id)
+    post_template = user["post_template"]
+
+    # Save template as a .txt file
+    file_path = f"post_template_{user_id}.txt"
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(post_template)
+
+    keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("✏ Change Template", callback_data="change_post_template")],
+    [InlineKeyboardButton("Home", callback_data="home")]
+])
+
+    await client.send_document(user_id, file_path, caption="📄 **Your Current Post Template**")
+    await query.message.reply_text("Would you like to change your post template?", reply_markup=keyboard)
+
+    os.remove(file_path)  # Delete file after sending
+@app.on_callback_query(filters.regex("change_post_template"))
+async def change_post_template(client, query):
+    """Ask user to send a new post template."""
+    user_id = query.from_user.id
+
+    await client.send_message(user_id, "📄 Send me your new post template:")
+    
+    # Listen for the next message from the user
+    new_template_msg = await client.listen(user_id)
+    new_template = new_template_msg.text.strip()
+
+    # Update template in MongoDB
+    await users_collection.update_one(
+        {"user_id": user_id}, 
+        {"$set": {"post_template": new_template}}, 
+        upsert=True  # Ensures entry exists
+    )
+
+    await client.send_message(user_id, "✅ Your post template has been updated successfully!")
+
+    
+    
+
+
+
 if __name__ == "__main__":
     print("Bot is running...")
     app.run()
