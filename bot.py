@@ -90,7 +90,7 @@ async def collect_post_details(client, message, user_id, imdb_link):
                              "`Resolution | Size | Download Link | Stream Link`\n"
                              "You can send multiple lines.")
     download_links = (await client.listen(message.chat.id)).text.strip().split("\n")
-    m = await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
+    m= await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
 
     await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links)
 
