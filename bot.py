@@ -144,10 +144,11 @@ async def handle_message(client, message):
                     f'<a href="{stream_link}" target="_blank" rel="noopener">'
                     f'<button class="dwd-button"> <i class="fas fa-play"></i> Stream Link</button></a></p>\n'
                 )
-                footer=f"<hr /><p style="text-align: center;">keep Visiting and supporting us! ❣️</p>"
+                
             else:
                 await message.reply_text(f"⚠️ Invalid format in: `{line}`. Skipping this line.")
                 await m.delete()
+        footer=f"<hr /><p style="text-align: center;">keep Visiting and supporting us! ❣️</p>"
 
         # Final HTML content
         html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html +footer
