@@ -44,15 +44,15 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
 
 [imdb style="dark"]{movie}[/imdb]\n
 <h5 style="text-align: center;"><span style="font-family: arial black, sans-serif; color: #eef425;"><strong><strong>{title} ({year})- Movie Download </strong> jnmovies </strong></span></h5>\n\n
-<strong>Movie Name:</strong> {title}\n
-<strong>Release Year:</strong> {year}\n
-<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audios} </strong></span>\n
-<strong>Genres:</strong> {genres}\n
-<strong>Rating:</strong> {rating}\n
-<strong>Cast:</strong> {cast_list}\n
-<strong>Writer:</strong> {writers}\n
-<strong>Director:</strong> {directors}\n
-<strong>Source:</strong> {quality}\n\n
+<strong>Movie Name:</strong> {title}<br>
+<strong>Release Year:</strong> {year}<br>
+<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audios} </strong></span><br>
+<strong>Genres:</strong> {genres}<br>
+<strong>Rating:</strong> {rating}<br>
+<strong>Cast:</strong> {cast_list}<br>
+<strong>Writer:</strong> {writers}<br>
+<strong>Director:</strong> {directors}<br>
+<strong>Source:</strong> {quality}<br><br>
 
 
 
@@ -84,7 +84,7 @@ async def handle_message(client, message):
 
         await message.reply_text(
             "Send me the quality (Choose from below):\n"
-            "```CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless```"
+            "`CAM`,` HDCAM`,` TS`,` HDTS`,` WEBRip`,` WEB-DL`,` HDTV`,` PDTV`,` DVDScr`,` DVDRip`,` BDRip`,` BRRip`,` REMUX`,` HDRip`,` 4K UHD BluRay Rip Lossless`"
         )
         quality = (await client.listen(message.chat.id)).text.strip()
 
@@ -144,12 +144,13 @@ async def handle_message(client, message):
                     f'<a href="{stream_link}" target="_blank" rel="noopener">'
                     f'<button class="dwd-button"> <i class="fas fa-play"></i> Stream Link</button></a></p>\n'
                 )
+                footer=f"<hr /><p style="text-align: center;">keep Visiting and supporting us! ❣️</p>"
             else:
                 await message.reply_text(f"⚠️ Invalid format in: `{line}`. Skipping this line.")
                 await m.delete()
 
         # Final HTML content
-        html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html  
+        html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html +footer
 
         # Save to a .html file
         file_path = "movie_details.html"
