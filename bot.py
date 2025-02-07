@@ -38,11 +38,11 @@ def generate_post_from_imdb_link(imdb_url: str, audios: str, category: str, qual
         directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
 
         post = (
-            f"""<p>{title} (year) is now ready for you to Download in {quality}quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>\n
+            f"""<p>{title} ({year}) is now ready for you to Download in {quality}quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>\n
 <p>
 <span style="color: #339966;"><strong><a style="color: #339966;" href="/">jnmovies </a></strong></span> is your one-stop destination for the latest top-quality Movies, Web Series, and Anime. We provide hassle-free Direct or Google Drive download links for a quick and secure experience. Just click the download button below and follow the simple steps to get your File. Get ready for an unforgettable cinematic experience</p>\n
 
-[imdb style="dark"]{movie}[/imdb]\n
+[imdb style="dark"]{imdb_id}[/imdb]\n
 <h5 style="text-align: center;"><span style="font-family: arial black, sans-serif; color: #eef425;"><strong><strong>{title} ({year})- Movie Download </strong> jnmovies </strong></span></h5>\n\n
 <strong>Movie Name:</strong> {title}<br>
 <strong>Release Year:</strong> {year}<br>
