@@ -88,6 +88,7 @@ async def collect_post_details(client, message, user_id, imdb_link):
                              "`Resolution | Size | Download Link | Stream Link`\n"
                              "You can send multiple lines.")
     download_links = (await client.listen(message.chat.id)).text.strip().split("\n")
+    m=await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
 
     # Now generate the post
     await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links)
@@ -145,6 +146,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     file_path = "movie_details.html"
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
+    await m.delete()
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
     os.remove(file_path)
