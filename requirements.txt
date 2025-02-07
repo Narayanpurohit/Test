@@ -2,3 +2,5 @@ pyrogram
 tgcrypto==1.2.3
 imdbpy
 pyrofork
+motor
+pymongo
