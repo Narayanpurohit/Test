@@ -134,3 +134,7 @@ async def handle_message(client, message):
 
     else:
         await message.reply_text("⚠️ Please send a valid IMDb link!")
+        
+if __name__ == "__main__":
+    print("Bot is running...")
+    app.run()
