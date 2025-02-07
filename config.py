@@ -13,7 +13,7 @@ COLLECTION_NAME = "users"
 
 # 🔹 Default Templates
 DEFAULT_POST_TEMPLATE = """
-<p>{title} ({year}) is now ready for you to Download in {quality} quality, complete with {audios} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>
+<p>{title} ({year}) is now ready for you to Download in {quality} quality, complete with {audio} audio. This {category} hit comes in MKV format. Dive into the world of {genres} with this Movie.</p>
 
 <p>
 <span style="color: #339966;"><strong><a style="color: #339966;" href="/">jnmovies </a></strong></span> is your one-stop destination for the latest top-quality Movies, Web Series, and Anime. We provide hassle-free Direct or Google Drive download links for a quick and secure experience. Just click the download button below and follow the simple steps to get your File. Get ready for an unforgettable cinematic experience.
@@ -28,7 +28,7 @@ DEFAULT_POST_TEMPLATE = """
 
 <strong>Movie Name:</strong> {title}<br>
 <strong>Release Year:</strong> {year}<br>
-<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audios}</strong></span><br>
+<strong>Language:</strong> <span style="color: #ff0000;"><strong>{audio}</strong></span><br>
 <strong>Genres:</strong> {genres}<br>
 <strong>Rating:</strong> {rating}<br>
 <strong>Cast:</strong> {cast_list}<br>
