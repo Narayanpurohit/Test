@@ -157,7 +157,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     file_path = "movie_details.html"
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
-    await m.delete()
+    
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
     os.remove(file_path)
 
