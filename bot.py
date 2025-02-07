@@ -111,9 +111,15 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     # Fetch movie details
     movie = ia.get_movie(imdb_id)
     title = movie.get('title', 'Unknown Title')
+    rating = movie.get('rating', 'No Rating')
     year = movie.get('year', 'Unknown Year')
     genres = ", ".join(movie.get('genres', []))
     plot = movie.get('plot', ['Plot not available'])[0]
+    cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
+    writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
+    directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
+
+    
 
     # Generate Screenshot Links in HTML
     screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
@@ -131,7 +137,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
             download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
     # Fill the template
-    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id )
+    post = post_template.format(title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating )
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
     # Save to a .html file
