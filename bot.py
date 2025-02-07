@@ -148,7 +148,7 @@ async def handle_message(client, message):
             else:
                 await message.reply_text(f"⚠️ Invalid format in: `{line}`. Skipping this line.")
                 await m.delete()
-        footer=f"<hr /><p style="text-align: center;">keep Visiting and supporting us! ❣️</p>"
+        footer=f'<hr /><p style="text-align: center;">keep Visiting and supporting us! ❣️</p>'
 
         # Final HTML content
         html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html +footer
