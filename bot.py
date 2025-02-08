@@ -137,7 +137,6 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
 
     title2 = movie.get("title", "unknown_title").replace(" ", "_").replace("/", "_")
-    print(title2)
     await client.send_message(message.chat.id,f"{title2}")
     if poster_url:
         file_name = f"{title2}.jpg"
@@ -154,7 +153,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
    
 
     
-        print=(poster_url)
+        print(poster_url)
     # Generate Screenshot Links in HTML
     screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
     for link in screenshots:
