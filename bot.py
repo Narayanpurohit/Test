@@ -175,6 +175,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         if file_path:
             poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
             print(poster_url)
+            print("hello")
 
 
         else:
@@ -184,7 +185,9 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
    
 
     
-        print(poster_url)
+    print(poster_url)
+    print("hlo")
+        
     # Generate Screenshot Links in HTML
     screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
     for link in screenshots:
