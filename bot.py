@@ -9,7 +9,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
 # ✅ Import configuration from config.py
-from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE
+from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE,WORDPRESS_URL, WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD
 
 DOWNLOAD_DIR = "/www/wwwroot/Jnmovies.site/wp-content/uploads/"
 # 🔹 MongoDB Setup
@@ -27,6 +27,32 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
+
+async def post_to_wordpress(file_path, title):
+    # Read file content
+    with open(file_path, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    # Prepare the data for the post
+    post_data = {
+        "title": title,
+        "content": content,
+        "status": "publish"  # Set to "draft" if you don't want to publish immediately
+    }
+
+    # Make the request to WordPress
+    response = requests.post(
+        WORDPRESS_URL,
+        json=post_data,
+        auth=(WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD),
+        headers={"Content-Type": "application/json"}
+    )
+
+    # Check the response
+    if response.status_code == 201:
+        return response.json().get("link")  # Return the post URL
+    else:
+        return f"Error: {response.text}"
 
 
 async def get_user_data(user_id):
