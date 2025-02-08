@@ -1,15 +1,17 @@
+#mogodb post template footer
+
 import os
 import re
 import pymongo
-import requests
 from motor.motor_asyncio import AsyncIOMotorClient
 from imdb import Cinemagoer
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-
+import requests
 # ✅ Import configuration from config.py
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE
 
+DOWNLOAD_DIR = "/www/wwwroot/Jnmovies.site/wp-content/uploads/"
 # 🔹 MongoDB Setup
 client_mongo = AsyncIOMotorClient(MONGO_URI)
 db = client_mongo[DB_NAME]
@@ -26,20 +28,6 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
-UPLOAD_FOLDER = "/www/wwwroot/jnmovies.site/wp-content/uploads/"  # Path to save images
-
-def sanitize_filename(filename):
-    """Sanitize filename to avoid issues with special characters."""
-    return filename.replace(" ", "_").replace("/", "_")
-
-def get_unique_filename(directory, filename):
-    """Ensure filename is unique by appending a number if needed."""
-    base_name, ext = os.path.splitext(filename)
-    counter = 1
-    while os.path.exists(os.path.join(directory, filename)):
-        filename = f"{base_name}_{counter}{ext}"
-        counter += 1
-    return filename
 
 async def get_user_data(user_id):
     """Fetch user data from MongoDB or create a new entry."""
@@ -53,6 +41,17 @@ async def get_user_data(user_id):
         await users_collection.insert_one(user)
     return user
 
+def download_image(url, file_name):
+    response = requests.get(url)
+    if response.status_code == 200:
+        file_path = os.path.join(DOWNLOAD_DIR, file_name)
+        with open(file_path, "wb") as file:
+            file.write(response.content)
+        return file_path
+    return None
+
+
+
 @app.on_message(filters.command("start"))
 async def start_command(client, message):
     """Handle the /start command."""
@@ -60,56 +59,74 @@ async def start_command(client, message):
     await get_user_data(user_id)  # Ensure user is stored in the database
     await message.reply_text("Hi! Use /newpost to generate a movie post!")
 
+
 @app.on_message(filters.command("newpost"))
 async def newpost_command(client, message):
     """Start new post creation."""
     user_id = message.from_user.id
     await message.reply_text("🎬 Send me the **IMDb link**:")
     imdb_link = (await client.listen(message.chat.id)).text.strip()
+    title = movie.get("title", "unknown_title").replace(" ", "_").replace("/", "_")
+    print(title)
+
     await collect_post_details(client, message, user_id, imdb_link)
+
 
 async def collect_post_details(client, message, user_id, imdb_link):
     """Collect all post details step by step."""
 
-    await message.reply_text("🎧 Send me the **Audio Languages** (e.g., Hindi, English, Tamil):")
+    # Step 1: Ask for audios Language
+    await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
     audios = (await client.listen(message.chat.id)).text.strip()
 
+    # Step 2: Ask for Category
     await message.reply_text("🎭 Send me the **Category** (e.g., Hollywood, Bollywood, Anime, etc.):")
     category = (await client.listen(message.chat.id)).text.strip()
 
-    await message.reply_text("🎞 Send me the **Quality**:")
+    # Step 3: Ask for Quality
+    await message.reply_text(
+        "🎞 Send me the **Quality** (Choose from below):\n"
+        "`CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless`"
+    )
     quality = (await client.listen(message.chat.id)).text.strip()
 
+    # Step 4: Ask for Post Type
     await message.reply_text("📌 Send me the **Post Type** (e.g., Movie, Web Series, etc.):")
     type = (await client.listen(message.chat.id)).text.strip()
 
+    # Step 5: Ask for Screenshot Links
     await message.reply_text("🖼 Send me the **Screenshot Links** (each on a new line):")
     screenshots = (await client.listen(message.chat.id)).text.strip().split("\n")
 
+    # Step 6: Ask for Download & Stream Links
     await message.reply_text("🔗 Send the **Download Links** in this format:\n"
                              "`Resolution | Size | Download Link | Stream Link`\n"
                              "You can send multiple lines.")
     download_links = (await client.listen(message.chat.id)).text.strip().split("\n")
-    m= await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
+    m=await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
 
+    # Now generate the post
     await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links)
 
-async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links):
-    """Generate a post using all collected details and download IMDb poster."""
 
+async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links):
+    """Generate a post using all collected details."""
+
+    # Get user templates
     user = await get_user_data(user_id)
     post_template = user["post_template"]
     footer_template = user["footer_template"]
 
+    # Extract IMDb ID
     imdb_id_match = re.search(r'tt(\d+)', imdb_url)
     imdb_id = imdb_id_match.group(1) if imdb_id_match else None
     if not imdb_id:
         await message.reply_text("⚠️ Invalid IMDb link!")
         return
 
+    # Fetch movie details
     movie = ia.get_movie(imdb_id)
-    poster_url = movie.get('cover url', 'No poster available')
-    print=(poster_url)
+    poster_url = movie.get('full-size cover url', 'No poster available')
     title = movie.get('title', 'Unknown Title')
     rating = movie.get('rating', 'No Rating')
     year = movie.get('year', 'Unknown Year')
@@ -119,31 +136,15 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
 
-    # **Download IMDb Poster AFTER collecting all details**
-    if poster_url.startswith("http"):
-        try:
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-            response = requests.get(poster_url, stream=True, headers=headers, verify=False)
-            if response.status_code == 200:
-                file_name = sanitize_filename(f"{title}.jpg")
-                file_name = get_unique_filename(UPLOAD_FOLDER, file_name)
-                file_path = os.path.join(UPLOAD_FOLDER, file_name)
-                with open(file_path, "wb") as file:
-                    for chunk in response.iter_content(1024):
-                        file.write(chunk)
-                poster_url = f"https://jnmovies.site/wp-content/uploads/{file_name}"
-            else:
-                poster_url = "No poster available"
-        except Exception as e:
-            poster_url = "No poster available"
+    
 
-    # **Generate Screenshot Links in HTML**
+    # Generate Screenshot Links in HTML
     screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
     for link in screenshots:
         screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
     screenshots_html += '</ul></div></div>'
 
-    # **Generate Download Buttons**
+    # Generate Download Buttons
     download_html = ""
     for line in download_links:
         parts = line.split("|")
@@ -152,77 +153,22 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
             download_html += f'<h6 style="text-align: center;"><strong>{title} ({year}) {resolution} [{size}]</strong></h6>\n'
             download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
-    post = post_template.format(poster_url=poster_url, title=title, year=year, genres=genres, plot=plot, quality=quality, audios=audios, category=category, type=type, imdb_id=imdb_id, directors=directors, writers=writers, cast_list=cast_list, rating=rating)
+    # Fill the template
+    post = post_template.format(poster_url=poster_url,title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating )
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
+    # Save to a .html file
     file_path = "movie_details.html"
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(html_content)
-    
+    await m.delete()
+
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
     os.remove(file_path)
 
-
-
-@app.on_message(filters.command("settings"))
-async def settings_command(client, message):
-    """Send user settings with inline buttons."""
-    user_id = message.from_user.id
-    await get_user_data(user_id)  # Ensure user data exists
-
-    keyboard = InlineKeyboardMarkup([
-    [InlineKeyboardButton("📄 Post Template", callback_data="view_post_template")],
-    [InlineKeyboardButton("📄 Footer Template", callback_data="view_footer_template")]
-])
-
-    await message.reply_text("⚙️ **Settings**\n\nCustomize your post template:", reply_markup=keyboard)
-
-@app.on_callback_query(filters.regex("view_post_template"))
-async def view_post_template(client, query):
-    """Send current post template and provide an option to change it."""
-    user_id = query.from_user.id
-    user = await get_user_data(user_id)
-    post_template = user["post_template"]
-
-    # Save template as a .txt file
-    file_path = f"post_template_{user_id}.txt"
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(post_template)
-
-    keyboard = InlineKeyboardMarkup([
-    [InlineKeyboardButton("✏ Change Template", callback_data="change_post_template")],
-    [InlineKeyboardButton("Home", callback_data="home")]
-])
-
-    await client.send_document(user_id, file_path, caption="📄 **Your Current Post Template**")
-    await query.message.reply_text("Would you like to change your post template?", reply_markup=keyboard)
-
-    os.remove(file_path)  # Delete file after sending
-@app.on_callback_query(filters.regex("change_post_template"))
-async def change_post_template(client, query):
-    """Ask user to send a new post template."""
-    user_id = query.from_user.id
-
-    await client.send_message(user_id, "📄 Send me your new post template:")
+ 
     
-    # Listen for the next message from the user
-    new_template_msg = await client.listen(user_id)
-    new_template = new_template_msg.text.strip()
-
-    # Update template in MongoDB
-    await users_collection.update_one(
-        {"user_id": user_id}, 
-        {"$set": {"post_template": new_template}}, 
-        upsert=True  # Ensures entry exists
-    )
-
-    await client.send_message(user_id, "✅ Your post template has been updated successfully!")
-
-    
-    
-
-
-
+# Run the bot
 if __name__ == "__main__":
     print("Bot is running...")
     app.run()
