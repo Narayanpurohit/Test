@@ -136,7 +136,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
     title2 = movie.get("title", "unknown_title").replace(" ", "_").replace("/", "_")
     print(title)
-    await client.send_text(message.chat.id,f"{title2}")
+    await client.send_message(message.chat.id,f"{title2}")
    
 
     
