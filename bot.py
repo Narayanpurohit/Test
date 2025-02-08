@@ -141,10 +141,10 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         file_name = f"{title2}.jpg"
         file_path = download_image(poster_url, file_name)
         if file_path:
-            poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}
+            poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
             print=(poster_url)
 
-        
+
         else:
             await message.reply_text("Failed to download the poster. Please try again.")
     else:
