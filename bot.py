@@ -166,11 +166,9 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     await client.send_message(message.chat.id,f"{title2}")
     file_name = f"{title2}.jpg"
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
-    if os.path.exists(file_path):
-        poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
-        print("hii")
+    
         
-    elif poster_url:
+    if poster_url:
         
         if file_path:
             poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
