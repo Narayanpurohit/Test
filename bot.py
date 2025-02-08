@@ -66,6 +66,7 @@ async def newpost_command(client, message):
     user_id = message.from_user.id
     await message.reply_text("🎬 Send me the **IMDb link**:")
     imdb_link = (await client.listen(message.chat.id)).text.strip()
+    print(imdb_link)
     
 
     await collect_post_details(client, message, user_id, imdb_link)
@@ -134,6 +135,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
     writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
+
     title2 = movie.get("title", "unknown_title").replace(" ", "_").replace("/", "_")
     print(title2)
     await client.send_message(message.chat.id,f"{title2}")
@@ -142,7 +144,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         file_path = download_image(poster_url, file_name)
         if file_path:
             poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
-            print=(poster_url)
+            print(poster_url)
 
 
         else:
