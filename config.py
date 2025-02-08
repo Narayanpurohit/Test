@@ -1,6 +1,6 @@
-WORDPRESS_URL = "https://yourwebsite.com/wp-json/wp/v2/posts"
-WORDPRESS_USERNAME = "your-username"
-WORDPRESS_APP_PASSWORD = "your-application-password"
+WORDPRESS_URL = "https://jnmovies.site/wp-json/wp/v2/posts"
+WORDPRESS_USERNAME = "spark"
+WORDPRESS_APP_PASSWORD = "spark"
 
 # config.py
 
