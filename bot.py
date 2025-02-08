@@ -168,6 +168,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
     if os.path.exists(file_path):
         poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
+        print("hii)
         
     elif poster_url:
         
