@@ -9,7 +9,7 @@ from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
 # ✅ Import configuration from config.py
-from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE,WORDPRESS_URL, WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD
+from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE,DEFAULT_WORDPRESS_URL,DEFAULT_WORDPRESS_USERNAME,DEFAULT_WORDPRESS_APP_PASSWORD,DEFAULT_SS1,DEFAULT_SS2,DEFAULT_SS3,DEFAULT_DL1,DEFAULT_DL2
 
 DOWNLOAD_DIR = "/www/wwwroot/Jnmovies.site/wp-content/uploads/"
 # 🔹 MongoDB Setup
@@ -67,10 +67,9 @@ async def get_user_data(user_id):
             "ss3":DEFAULT_SS3,
             "dl1":DEFAULT_DL1,
             "dl2":DEFAULT_DL2,
-            "dl3":DEFAULT_DL3,
-            "wp_url":DEFAULT_WORDPRESS_URL,
-            "wp_username":DEFAULT_WORDPRESS_USERNAME,
-            "wp_passwd":DEFAULT_WORDPRESS_APP_PASSWORD,
+            "wp_url": DEFAULT_WORDPRESS_URL,
+            "wp_username": DEFAULT_WORDPRESS_USERNAME,
+            "wp_passwd": DEFAULT_WORDPRESS_APP_PASSWORD,
             "footer_template": DEFAULT_FOOTER_TEMPLATE
             
         }
