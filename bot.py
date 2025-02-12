@@ -35,7 +35,7 @@ async def post_to_wordpress(file_path, title):
 
     # Prepare the data for the post
     post_data = {
-        "title": wp_title,
+        "title": Title,
         "content": content,
         "status": "publish"  # Set to "draft" if you don't want to publish immediately
     }
@@ -221,7 +221,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
-    Title=title
+    Title=title+ year
     post_url = await post_to_wordpress(file_path, Title)
 
 # Send the WordPress post link to the user
