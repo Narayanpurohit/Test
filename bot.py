@@ -199,10 +199,10 @@ async def collect_post_details(client, message, user_id, imdb_link):
     m=await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
 
     # Now generate the post
-    await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links,poster_url)
+    await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links)
 
 
-async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links,poster_url):
+async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links):
     """Generate a post using all collected details."""
 
     # Get user templates
