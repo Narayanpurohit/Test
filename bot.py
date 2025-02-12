@@ -28,6 +28,25 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
+def download_imdb_poster(poster_url, movie_title):
+    """Downloads and saves the IMDb poster."""
+    
+    if not poster_url:
+        return None
+
+    ext = poster_url.split(".")[-1].split("?")[0]
+    file_name = f"{movie_title}.{ext}"
+    file_path = os.path.join("/tmp", file_name)
+
+    response = requests.get(poster_url, stream=True)
+    if response.status_code == 200:
+        with open(file_path, "wb") as file:
+            for chunk in response.iter_content(1024):
+                file.write(chunk)
+        return file_path
+    return None
+
+
 async def post_to_wordpress(file_path, title,user_id):
     # Read file content
     with open(file_path, "r", encoding="utf-8") as file:
