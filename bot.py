@@ -93,7 +93,7 @@ async def post_to_wordpress(file_path, title,user_id):
     
     user = await get_user_data(user_id)
     WORDPRESS_USERNAME = user["wp_username"]
-    WORDPRESS_URL = user["wp_url"]
+    WORDPRESS_URL = user["wp_url"]+"/wp-json/wp/v2/posts"
     WORDPRESS_APP_PASSWORD = user["wp_passwd"]
     
     response = requests.post(
