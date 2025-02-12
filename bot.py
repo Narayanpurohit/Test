@@ -286,6 +286,32 @@ async def change_post_template(client, callback_query):
     
     await client.send_message(user_id, "✅ **Post template updated successfully!**")
     
+
+
+@app.on_message(filters.command("delete") & filters.private)
+async def delete_user(client, message):
+    """Delete a specific user from MongoDB using /delete user_id."""
+    try:
+        # Get the user ID from the command
+        command_parts = message.text.split()
+        if len(command_parts) != 2 or not command_parts[1].isdigit():
+            await message.reply_text("❌ Invalid format! Use:\n`/delete <user_id>`", parse_mode="markdown")
+            return
+
+        user_id = int(command_parts[1])  # Convert user_id to integer
+
+        # Delete user from MongoDB
+        result = await users_collection.delete_one({"user_id": user_id})
+
+        if result.deleted_count > 0:
+            await message.reply_text(f"✅ User `{user_id}` has been deleted from the database.", parse_mode="markdown")
+        else:
+            await message.reply_text(f"❌ No data found for user `{user_id}`.", parse_mode="markdown")
+
+    except Exception as e:
+        await message.reply_text(f"❌ Error: `{str(e)}`", parse_mode="markdown")
+
+
 # Run the bot
 if __name__ == "__main__":
     print("Bot is running...")
