@@ -239,6 +239,8 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     poster_url = download_imdb_poster(poster_url, title2)
     if poster_url:
         poster_url = upload_to_wordpress(poster_url)
+        if poster_url:
+            poster_url=poster_url
         
 
     print(poster_url)
