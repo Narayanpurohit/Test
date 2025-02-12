@@ -206,7 +206,56 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     os.remove(file_path)
     
 
- 
+@app.on_message(filters.command("settings"))
+async def settings_command(client, message):
+    """Send settings options with an inline button."""
+    user_id = message.from_user.id
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Post Template", callback_data="post_template")]
+    ])
+    await message.reply_text("⚙️ **Settings**\nChoose an option:", reply_markup=keyboard)
+
+
+@app.on_callback_query(filters.callback_data("post_template"))
+async def post_template_callback(client, callback_query):
+    """Send the current post template as a .txt file with an option to change it."""
+    user_id = callback_query.from_user.id
+    user = await get_user_data(user_id)
+    post_template = user["post_template"]
+
+    file_path = "post_template.txt"
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(post_template)
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Change Template", callback_data="change_template")]
+    ])
+    
+    await client.send_document(
+        chat_id=callback_query.message.chat.id,
+        document=file_path,
+        caption="📄 Here is your current post template.",
+        reply_markup=keyboard
+    )
+    os.remove(file_path)
+
+
+@app.on_callback_query(filters.callback_data("change_template"))
+async def change_template_callback(client, callback_query):
+    """Ask user to send a new post template."""
+    user_id = callback_query.from_user.id
+    await client.send_message(user_id, "✏️ Send me the new **post template** as text.")
+
+    response = (await client.listen(user_id)).text.strip()
+
+    await users_collection.update_one(
+        {"user_id": user_id}, {"$set": {"post_template": response}}
+    )
+    
+    await client.send_message(user_id, "✅ **Post template updated successfully!**")
+
+
+
     
 # Run the bot
 if __name__ == "__main__":
