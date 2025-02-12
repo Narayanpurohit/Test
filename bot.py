@@ -154,6 +154,11 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     # Get user templates
     user = await get_user_data(user_id)
     post_template = user["post_template"]
+    ss1 = user["ss1"]
+    ss2 = user["ss2"]
+    ss3 = user["ss3"]
+    dl1 = user["dl1"]
+    dl2 = user["dl2"]
     footer_template = user["footer_template"]
 
     print(imdb_url)
@@ -180,10 +185,10 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     print(poster_url)
         
     # Generate Screenshot Links in HTML
-    screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
+    screenshots_html = '{ss1}'
     for link in screenshots:
-        screenshots_html += f'<li class="neoss"><img src="{link}" /></li>\n'
-    screenshots_html += '</ul></div></div>'
+        screenshots_html += ss2.format(link=link )
+    screenshots_html += '{ss3}'
 
     # Generate Download Buttons
     download_html = ""
@@ -196,8 +201,18 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     # Fill the template
     post = post_template.format(poster_url=poster_url,title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating )
+    
+    
+    
+    screenshots_html=ss1+ss2+ss3
+    download_html=dl1+dl2
+    
+    
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
+    
+    
+    
     # Save to a .html file
     file_path = "movie_details.html"
     with open(file_path, "w", encoding="utf-8") as file:
