@@ -101,6 +101,10 @@ async def newpost_command(client, message):
 async def collect_post_details(client, message, user_id, imdb_link):
     """Collect all post details step by step."""
 
+    await message.reply_text(" Send me the **Poster url** :")
+    poster_url = (await client.listen(message.chat.id)).text.strip()
+
+    
     # Step 1: Ask for audios Language
     await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
     audios = (await client.listen(message.chat.id)).text.strip()
@@ -152,7 +156,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     # Fetch movie details
     movie = ia.get_movie(imdb_id)
-    poster_url = movie.get('full-size cover url', 'No poster available')
+    
     title = movie.get('title', 'Unknown Title')
     rating = movie.get('rating', 'No Rating')
     year = movie.get('year', 'Unknown Year')
@@ -162,31 +166,8 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
 
-    title2 = movie.get("title", "unknown_title").replace(" ", "_").replace("/", "_")
-    await client.send_message(message.chat.id,f"{title2}")
-    file_name = f"{title2}.jpg"
-    file_path = os.path.join(DOWNLOAD_DIR, file_name)
-    if os.path.exists(file_path):
-        poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
-        print("hii")
-        
-    elif poster_url:
-        
-        if file_path:
-            poster_url=f"https://jnmovies.site/wp-content/uploads/{file_name}"
-            print(poster_url)
-            print("hello")
-
-
-        else:
-            await message.reply_text("Failed to download the poster. Please try again.")
-    else:
-        await message.reply_text("No poster found for this movie.")
-   
-
     
     print(poster_url)
-    print("hlo")
         
     # Generate Screenshot Links in HTML
     screenshots_html = '<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n'
