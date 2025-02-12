@@ -100,6 +100,9 @@ async def newpost_command(client, message):
 
 async def collect_post_details(client, message, user_id, imdb_link):
     """Collect all post details step by step."""
+    await message.reply_text("🎧 Send me the **Movie main poster** :")
+    image = (await client.listen(message.chat.id)).text.strip()
+
 
     # Step 1: Ask for audios Language
     await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
@@ -132,10 +135,10 @@ async def collect_post_details(client, message, user_id, imdb_link):
     m=await message.reply_sticker("CAACAgQAAxkBAAEKeqNlIpmeUoOEsEWOWEiPxPi3hH5q-QACbg8AAuHqsVDaMQeY6CcRojAE")
 
     # Now generate the post
-    await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links)
+    await generate_post(client, message, user_id, imdb_link, audios, category, quality, type, screenshots, download_links,image)
 
 
-async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links):
+async def generate_post(client, message, user_id, imdb_url, audios, category, quality, type, screenshots, download_links,image):
     """Generate a post using all collected details."""
 
     # Get user templates
@@ -204,7 +207,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
             download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
 
     # Fill the template
-    post = post_template.format(poster_url=poster_url,title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating )
+    post = post_template.format(poster_url=poster_url,title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating,image=image )
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
 
     # Save to a .html file
