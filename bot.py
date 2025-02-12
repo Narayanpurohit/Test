@@ -223,7 +223,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
-    Title=title+ year
+    Title=title+ str(year)
     post_url = await post_to_wordpress(file_path, Title)
 
 # Send the WordPress post link to the user
