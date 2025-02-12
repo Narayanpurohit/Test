@@ -103,7 +103,7 @@ async def collect_post_details(client, message, user_id, imdb_link):
 
     
     await message.reply_text(" Send me the **Poster Url** :")
-    audios = (await client.listen(message.chat.id)).text.strip()
+    poster_url = (await client.listen(message.chat.id)).text.strip()
 
     # Step 1: Ask for audios Language
     await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
