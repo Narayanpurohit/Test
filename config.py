@@ -1,6 +1,3 @@
-WORDPRESS_URL = "https://jnmovies.site/wp-json/wp/v2/posts"
-WORDPRESS_USERNAME = "admin"
-WORDPRESS_APP_PASSWORD = "DXyJ 3IJB IHax 53oG JUDT ozIx"
 
 # config.py
 
@@ -13,6 +10,17 @@ BOT_TOKEN = "6677023637:AAES7_yErqBDZY7wQP1EOyIGhpAN1d9fY5o"  # Replace with you
 MONGO_URI = "mongodb+srv://jnbots76:jacIjUcT5DBeBCdM@cluster0.tsrup.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"  # Change if using cloud MongoDB
 DB_NAME = "telegram_bot"
 COLLECTION_NAME = "users"
+
+
+
+
+
+DEFAULT_WORDPRESS_URL = "https://jnmovies.site/wp-json/wp/v2/posts"
+DEFAULT_WORDPRESS_USERNAME = "admin"
+DEFAULT_WORDPRESS_APP_PASSWORD = "DXyJ 3IJB IHax 53oG JUDT ozIx"
+
+
+
 
 # 🔹 Default Templates
 DEFAULT_POST_TEMPLATE = """
@@ -42,4 +50,22 @@ DEFAULT_POST_TEMPLATE = """
 <h4 style="text-align: center;">
 <span style="color: #eef425;">Storyline:</span></h4>
 <p>{plot}</p>"""
+
+DEFAULT_SS1=
+
+
+DEFAULT_SS2=
+
+
+DEFAULT_SS3=
+
+
+DEFAULT_DL1=
+
+
+DEFAULT_DL2=
+
+
+DEFAULT_DL3=
+
 DEFAULT_FOOTER_TEMPLATE = """<hr /><p style="text-align: center;">Keep Visiting and Supporting Us! ❣️</p>"""
