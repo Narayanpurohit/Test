@@ -198,7 +198,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         parts = line.split("|")
         if len(parts) == 4:
             resolution, size, dl_link, stream_link = map(str.strip, parts)
-            download_html += dl1.format(resolution=resolution,size=size,dl_link=dl_link,stream_link=stream_link,title=title,year=yeark
+            download_html += dl1.format(resolution=resolution,size=size,dl_link=dl_link,stream_link=stream_link,title=title,year=year
 )
             download_html += dl2.format(resolution=resolution,size=size,dl_link=dl_link,stream_link=stream_link,title=title,year=year)
 
