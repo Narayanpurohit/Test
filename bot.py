@@ -174,7 +174,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     movie = ia.get_movie(imdb_id)
     title = movie.get('title', 'Unknown Title')
     rating = movie.get('rating', 'No Rating')
-    year = movie.get('year', 'Unknown Year')
+    year = str(movie.get('year', 'Unknown Year'))
     genres = ", ".join(movie.get('genres', []))
     plot = movie.get('plot', ['Plot not available'])[0]
     cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
@@ -223,7 +223,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
-    Title=title+ str(year)
+    Title=title+year
     post_url = await post_to_wordpress(file_path, Title)
 
 # Send the WordPress post link to the user
