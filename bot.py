@@ -186,10 +186,10 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     print(poster_url)
         
     # Generate Screenshot Links in HTML
-    ss2=ss2.format(link=link )
+    #ss2=ss2.format(link=link )
     screenshots_html = '{ss1}'
     for link in screenshots:
-        screenshots_html += '{ss2}'
+        screenshots_html += ss2.format(link=link )
     screenshots_html += '{ss3}'
 
     # Generate Download Buttons
@@ -198,16 +198,17 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         parts = line.split("|")
         if len(parts) == 4:
             resolution, size, dl_link, stream_link = map(str.strip, parts)
-            download_html += f'<h6 style="text-align: center;"><strong>{title} ({year}) {resolution} [{size}]</strong></h6>\n'
-            download_html += f'<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n'
+            download_html += dl1.format(resolution=resolution,size=size,dl_link=dl_link,stream_link=stream_link,title=title,year=yeark
+)
+            download_html += dl2.format(resolution=resolution,size=size,dl_link=dl_link,stream_link=stream_link,title=title,year=year)
 
     # Fill the template
     post = post_template.format(poster_url=poster_url,title=title, year=year, genres=genres, plot=plot, quality=quality,audios=audios, category=category,type=type,imdb_id=imdb_id,directors =directors,writers=writers,cast_list=cast_list,rating=rating )
     
     
     
-    screenshots_html=ss1+ss2+ss3
-    download_html=dl1+dl2
+    
+    
     
     
     html_content = post + "\n\n" + screenshots_html + "\n\n" + download_html + footer_template
