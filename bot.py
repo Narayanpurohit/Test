@@ -29,7 +29,7 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
-async def upload_to_wordpress(image_path):
+async def upload_to_wordpress(image_path,user_id):
     """Uploads an image to WordPress Media Library and returns the URL."""
     
     with open(image_path, "rb") as img:
@@ -240,7 +240,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     poster_url = download_imdb_poster(poster_url, title2)
     if poster_url:
-        poster_url = await upload_to_wordpress(poster_url)
+        poster_url = await upload_to_wordpress(poster_url,user_id)
         if poster_url:
             poster_url=poster_url
         
