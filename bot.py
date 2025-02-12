@@ -295,7 +295,7 @@ async def delete_user(client, message):
         # Get the user ID from the command
         command_parts = message.text.split()
         if len(command_parts) != 2 or not command_parts[1].isdigit():
-            await message.reply_text("❌ Invalid format! Use:\n`/delete <user_id>`", parse_mode="markdown")
+            await message.reply_text("❌ Invalid format! Use:\n`/delete <user_id>`")
             return
 
         user_id = int(command_parts[1])  # Convert user_id to integer
@@ -304,12 +304,12 @@ async def delete_user(client, message):
         result = await users_collection.delete_one({"user_id": user_id})
 
         if result.deleted_count > 0:
-            await message.reply_text(f"✅ User `{user_id}` has been deleted from the database.", parse_mode="markdown")
+            await message.reply_text(f"✅ User `{user_id}` has been deleted from the database.")
         else:
-            await message.reply_text(f"❌ No data found for user `{user_id}`.", parse_mode="markdown")
+            await message.reply_text(f"❌ No data found for user `{user_id}`.")
 
     except Exception as e:
-        await message.reply_text(f"❌ Error: `{str(e)}`", parse_mode="markdown")
+        await message.reply_text(f"❌ Error: `{str(e)}`")
 
 
 # Run the bot
