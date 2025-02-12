@@ -41,6 +41,13 @@ async def post_to_wordpress(file_path, title):
     }
 
     # Make the request to WordPress
+    
+    
+    user = await get_user_data(user_id)
+    WORDPRESS_USERNAME = user["wp_username"]
+    WORDPRESS_URL = user["wp_url"]
+    WORDPRESS_APP_PASSWORD = user["wp_passwd"]
+    
     response = requests.post(
         WORDPRESS_URL,
         json=post_data,
