@@ -15,7 +15,7 @@ COLLECTION_NAME = "users"
 
 
 
-DEFAULT_WORDPRESS_URL = "https://jnmovies.site/wp-json/wp/v2/posts"
+DEFAULT_WORDPRESS_URL = "https://jnmovies.site"
 DEFAULT_WORDPRESS_USERNAME = "admin"
 DEFAULT_WORDPRESS_APP_PASSWORD = "DXyJ 3IJB IHax 53oG JUDT ozIx"
 
