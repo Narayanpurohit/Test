@@ -93,7 +93,7 @@ async def start_command(client, message):
     """Handle the /start command."""
     user_id = message.from_user.id
     await get_user_data(user_id)  # Ensure user is stored in the database
-    await message.reply_text("Hi! Use /newpost to generate a movie post!")
+    await message.reply_text("hello! Use /newpost to generate a movie post!")
 
 
 @app.on_message(filters.command("newpost"))
