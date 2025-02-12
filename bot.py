@@ -35,7 +35,7 @@ async def post_to_wordpress(file_path, title):
 
     # Prepare the data for the post
     post_data = {
-        "title": title,
+        "title": wp_title,
         "content": content,
         "status": "publish"  # Set to "draft" if you don't want to publish immediately
     }
@@ -67,6 +67,7 @@ async def get_user_data(user_id):
             "ss3":DEFAULT_SS3,
             "dl1":DEFAULT_DL1,
             "dl2":DEFAULT_DL2,
+            "auto_post":False,
             "wp_url": DEFAULT_WORDPRESS_URL,
             "wp_username": DEFAULT_WORDPRESS_USERNAME,
             "wp_passwd": DEFAULT_WORDPRESS_APP_PASSWORD,
