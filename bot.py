@@ -143,6 +143,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     post_template = user["post_template"]
     footer_template = user["footer_template"]
 
+    print(imdb_url)
     # Extract IMDb ID
     imdb_id_match = re.search(r'tt(\d+)', imdb_url)
     imdb_id = imdb_id_match.group(1) if imdb_id_match else None
