@@ -62,7 +62,17 @@ async def get_user_data(user_id):
         user = {
             "user_id": user_id,
             "post_template": DEFAULT_POST_TEMPLATE,
+            "ss1":DEFAULT_SS1,
+            "ss2":DEFAULT_SS2,
+            "ss3":DEFAULT_SS3,
+            "dl1":DEFAULT_DL1,
+            "dl2":DEFAULT_DL2,
+            "dl3":DEFAULT_DL3,
+            "wp_url":DEFAULT_WORDPRESS_URL,
+            "wp_username":DEFAULT_WORDPRESS_USERNAME,
+            "wp_passwd":DEFAULT_WORDPRESS_APP_PASSWORD,
             "footer_template": DEFAULT_FOOTER_TEMPLATE
+            
         }
         await users_collection.insert_one(user)
     return user
