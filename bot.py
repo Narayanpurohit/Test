@@ -27,7 +27,7 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
-def upload_to_wordpress(image_path):
+async def upload_to_wordpress(image_path):
     """Uploads an image to WordPress Media Library and returns the URL."""
     
     with open(image_path, "rb") as img:
