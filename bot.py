@@ -35,7 +35,7 @@ async def post_to_wordpress(file_path, title):
 
     # Prepare the data for the post
     post_data = {
-        "title": Title,
+        "title": title,
         "content": content,
         "status": "publish"  # Set to "draft" if you don't want to publish immediately
     }
