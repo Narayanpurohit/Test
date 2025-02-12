@@ -51,21 +51,21 @@ DEFAULT_POST_TEMPLATE = """
 <span style="color: #eef425;">Storyline:</span></h4>
 <p>{plot}</p>"""
 
-DEFAULT_SS1=
 
 
-DEFAULT_SS2=
+DEFAULT_SS1="""<div class="neoimgs"><div class="screenshots"><ul class="neoscr">\n"""
 
 
-DEFAULT_SS3=
+DEFAULT_SS2="""<li class="neoss"><img src="{link}" /></li>\n"""
 
 
-DEFAULT_DL1=
+DEFAULT_SS3="""</ul></div></div>"""
 
 
-DEFAULT_DL2=
+DEFAULT_DL1="""<h6 style="text-align: center;"><strong>{title} ({year}) {resolution} [{size}]</strong></h6>\n"""
 
 
-DEFAULT_DL3=
+DEFAULT_DL2="""<p style="text-align: center;"><a href="{dl_link}">Download</a> | <a href="{stream_link}">Stream</a></p>\n"""
+
 
 DEFAULT_FOOTER_TEMPLATE = """<hr /><p style="text-align: center;">Keep Visiting and Supporting Us! ❣️</p>"""
