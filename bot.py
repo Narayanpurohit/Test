@@ -8,6 +8,7 @@ from imdb import Cinemagoer
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import requests
+import base64
 # ✅ Import configuration from config.py
 from config import API_ID, API_HASH, BOT_TOKEN, MONGO_URI, DB_NAME, COLLECTION_NAME, DEFAULT_POST_TEMPLATE, DEFAULT_FOOTER_TEMPLATE,DEFAULT_WORDPRESS_URL,DEFAULT_WORDPRESS_USERNAME,DEFAULT_WORDPRESS_APP_PASSWORD,DEFAULT_SS1,DEFAULT_SS2,DEFAULT_SS3,DEFAULT_DL1,DEFAULT_DL2
 
@@ -27,6 +28,7 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
+
 async def upload_to_wordpress(image_path):
     """Uploads an image to WordPress Media Library and returns the URL."""
     
@@ -238,7 +240,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     poster_url = download_imdb_poster(poster_url, title2)
     if poster_url:
-        poster_url = upload_to_wordpress(poster_url)
+        poster_url = await upload_to_wordpress(poster_url)
         if poster_url:
             poster_url=poster_url
         
@@ -247,10 +249,12 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         
     # Generate Screenshot Links in HTML
     #ss2=ss2.format(link=link )
-    screenshots_html = ss1
+    screenshots_html = ""
+
     for link in screenshots:
         screenshots_html += ss2.format(link=link )
     screenshots_html += ss3
+    screenshots_html= ss1+screenshots_html
 
     # Generate Download Buttons
     download_html = ""
