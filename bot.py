@@ -27,6 +27,33 @@ app = Client(
     api_hash=API_HASH,
     bot_token=BOT_TOKEN,
 )
+def upload_to_wordpress(image_path):
+    """Uploads an image to WordPress Media Library and returns the URL."""
+    
+    with open(image_path, "rb") as img:
+        image_data = img.read()
+
+    filename = os.path.basename(image_path)
+    user = await get_user_data(user_id)
+    WP_USER = user["wp_username"]
+    WP_URL = user["wp_url"]
+    WP_APP_PASSWORD = user["wp_passwd"]
+    
+    headers = {
+        "Authorization": "Basic " + base64.b64encode(f"{WP_USER}:{WP_APP_PASSWORD}".encode()).decode(),
+        "Content-Disposition": f"attachment; filename={filename}",
+        "Content-Type": "image/jpeg"
+    }
+
+    response = requests.post(WP_URL, headers=headers, data=image_data)
+
+    if response.status_code == 201:
+        return response.json().get("source_url")
+    else:
+        print(f"❌ Upload failed: {response.text}")
+        return None
+
+
 
 def download_imdb_poster(poster_url, movie_title):
     """Downloads and saves the IMDb poster."""
@@ -138,8 +165,8 @@ async def collect_post_details(client, message, user_id, imdb_link):
     """Collect all post details step by step."""
 
     
-    await message.reply_text(" Send me the **Poster Url** :")
-    poster_url = (await client.listen(message.chat.id)).text.strip()
+    #await message.reply_text(" Send me the **Poster Url** :")
+    #poster_url = (await client.listen(message.chat.id)).text.strip()
 
     # Step 1: Ask for audios Language
     await message.reply_text("🎧 Send me the **audios Languages** (e.g., Hindi, English, Tamil):")
@@ -206,9 +233,14 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     cast_list = ", ".join([str(cast) for cast in movie.get('cast', [])[:5]]) or "N/A"
     writers = ", ".join([str(writer) for writer in movie.get('writer', [])[:3]]) or "N/A"
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
+    title2 = movie.get("title", "Unknown_Title").replace(" ", "_").replace("/", "_")
+    poster_url = movie.get("full-size cover url", None)
 
-    
-    
+    poster_url = download_imdb_poster(poster_url, title2)
+    if saved_poster:
+        poster_url = upload_to_wordpress(poster_url)
+        
+
     print(poster_url)
         
     # Generate Screenshot Links in HTML
