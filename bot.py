@@ -187,10 +187,10 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
         
     # Generate Screenshot Links in HTML
     #ss2=ss2.format(link=link )
-    screenshots_html = '{ss1}'
+    screenshots_html = ss1
     for link in screenshots:
         screenshots_html += ss2.format(link=link )
-    screenshots_html += '{ss3}'
+    screenshots_html += ss3
 
     # Generate Download Buttons
     download_html = ""
