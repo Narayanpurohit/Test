@@ -38,7 +38,7 @@ async def upload_to_wordpress(image_path,user_id):
     filename = os.path.basename(image_path)
     user = await get_user_data(user_id)
     WP_USER = user["wp_username"]
-    WP_URL = user["wp_url"]
+    WP_URL = f"{user['wp_url']}/wp-json/wp/v2/media"
     WP_APP_PASSWORD = user["wp_passwd"]
     
     headers = {
@@ -288,7 +288,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
     
-    Title=title+"{year}"
+    Title=Title = f"{title} {year}"
     user_id=message.chat.id
     post_url = await post_to_wordpress(file_path, Title,user_id)
 
