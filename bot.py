@@ -237,7 +237,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     poster_url = movie.get("full-size cover url", None)
 
     poster_url = download_imdb_poster(poster_url, title2)
-    if saved_poster:
+    if poster_url:
         poster_url = upload_to_wordpress(poster_url)
         
 
