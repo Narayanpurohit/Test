@@ -241,9 +241,10 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     if poster_path:
         featured_image_id = await upload_to_wordpress(poster_path, user_id)
     
+    
 
-    print(poster_path)
-    poster_url=poster_path
+    poster_url="https://jnmovies.site/wp-content/uploads/{file_name}
+    
         
     # Generate Screenshot Links in HTML
     #ss2=ss2.format(link=link )
