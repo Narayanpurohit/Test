@@ -243,7 +243,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     
     
 
-    poster_url="https://jnmovies.site/wp-content/uploads/{file_name}
+    poster_url="https://jnmovies.site/wp-content/uploads/{file_name}"
     
         
     # Generate Screenshot Links in HTML
