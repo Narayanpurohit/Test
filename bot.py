@@ -232,7 +232,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     title2 = movie.get("title", "Unknown_Title").replace(" ", "_").replace("/", "_")
     poster_url = movie.get("full-size cover url", None)
     ext = poster_url.split(".")[-1].split("?")[0]
-    file_name = f"{movie_title}.{ext}"
+    file_name = f"{title2}.{ext}"
     file_path = os.path.join(DOWNLOAD_DIR, file_name)
     
 
