@@ -239,6 +239,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     poster_url = movie.get("full-size cover url", None)
 
     poster_url = download_imdb_poster(poster_url, title2)
+    print("test1")
     if poster_url:
         poster_url = await upload_to_wordpress(poster_url,user_id)
         if poster_url:
@@ -287,10 +288,12 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     
 
     await client.send_document(message.chat.id, file_path, caption="📄 Here is your movie details file.")
-    
+    print("test2")
     Title= f"{title} {year}"
     user_id=message.chat.id
     post_url = await post_to_wordpress(file_path, Title,user_id)
+    
+    print("test3")
 
 # Send the WordPress post link to the user
     await message.reply_text(f"✅ Post published: {post_url}")
