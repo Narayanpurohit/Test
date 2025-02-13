@@ -242,9 +242,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     print("test1")
     if poster_url:
         poster_url = await upload_to_wordpress(poster_url,user_id)
-        if poster_url:
-            poster_url=poster_url
-        
+    
 
     print(poster_url)
         
