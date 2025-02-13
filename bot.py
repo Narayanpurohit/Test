@@ -242,6 +242,7 @@ if poster_path:
     
 
     print(poster_path)
+    poster_url=poster_path
         
     # Generate Screenshot Links in HTML
     #ss2=ss2.format(link=link )
