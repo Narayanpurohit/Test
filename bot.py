@@ -57,15 +57,13 @@ async def upload_to_wordpress(image_path, user_id):
 
 
 
-def download_imdb_poster(poster_url, movie_title):
+def download_imdb_poster(poster_url, movie_title,file_path,file_name):
     """Downloads and saves the IMDb poster."""
     
     if not poster_url:
         return None
 
-    ext = poster_url.split(".")[-1].split("?")[0]
-    file_name = f"{movie_title}.{ext}"
-    file_path = os.path.join(DOWNLOAD_DIR, file_name)
+    
 
     response = requests.get(poster_url, stream=True)
     if response.status_code == 200:
@@ -233,9 +231,13 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     directors = ", ".join([str(director) for director in movie.get('director', [])[:3]]) or "N/A"
     title2 = movie.get("title", "Unknown_Title").replace(" ", "_").replace("/", "_")
     poster_url = movie.get("full-size cover url", None)
-
-    poster_path = download_imdb_poster(poster_url, title2)
+    ext = poster_url.split(".")[-1].split("?")[0]
+    file_name = f"{movie_title}.{ext}"
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
     
+
+    poster_path = download_imdb_poster(poster_url, title2,file_path,file_name)
+     
     featured_image_id = None
 
     if poster_path:
