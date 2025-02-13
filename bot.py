@@ -65,7 +65,7 @@ def download_imdb_poster(poster_url, movie_title):
 
     ext = poster_url.split(".")[-1].split("?")[0]
     file_name = f"{movie_title}.{ext}"
-    file_path = os.path.join("/tmp", file_name)
+    file_path = os.path.join(DOWNLOAD_DIR, file_name)
 
     response = requests.get(poster_url, stream=True)
     if response.status_code == 200:
