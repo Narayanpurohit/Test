@@ -29,8 +29,8 @@ app = Client(
     bot_token=BOT_TOKEN,
 )
 
-async def upload_to_wordpress(image_path,user_id):
-    """Uploads an image to WordPress Media Library and returns the URL."""
+async def upload_to_wordpress(image_path, user_id):
+    """Uploads an image to WordPress Media Library and returns the media ID."""
     
     with open(image_path, "rb") as img:
         image_data = img.read()
@@ -50,7 +50,7 @@ async def upload_to_wordpress(image_path,user_id):
     response = requests.post(WP_URL, headers=headers, data=image_data)
 
     if response.status_code == 201:
-        return response.json().get("source_url")
+        return response.json().get("id")  # Return media ID instead of URL
     else:
         print(f"❌ Upload failed: {response.text}")
         return None
@@ -76,26 +76,24 @@ def download_imdb_poster(poster_url, movie_title):
     return None
 
 
-async def post_to_wordpress(file_path, title,user_id):
-    # Read file content
+async def post_to_wordpress(file_path, title, user_id, featured_image_id):
+    """Creates a WordPress post with a featured image."""
+    
     with open(file_path, "r", encoding="utf-8") as file:
         content = file.read()
 
-    # Prepare the data for the post
     post_data = {
         "title": title,
         "content": content,
-        "status": "publish"  # Set to "draft" if you don't want to publish immediately
+        "status": "publish",  # Change to "draft" if you don't want to publish immediately
+        "featured_media": featured_image_id  # Attach the featured image
     }
 
-    # Make the request to WordPress
-    
-    
     user = await get_user_data(user_id)
     WORDPRESS_USERNAME = user["wp_username"]
     WORDPRESS_URL = f"{user['wp_url']}/wp-json/wp/v2/posts"
     WORDPRESS_APP_PASSWORD = user["wp_passwd"]
-    
+
     response = requests.post(
         WORDPRESS_URL,
         json=post_data,
@@ -103,12 +101,10 @@ async def post_to_wordpress(file_path, title,user_id):
         headers={"Content-Type": "application/json"}
     )
 
-    # Check the response
     if response.status_code == 201:
         return response.json().get("link")  # Return the post URL
     else:
         return f"Error: {response.text}"
-
 
 async def get_user_data(user_id):
     """Fetch user data from MongoDB or create a new entry."""
@@ -238,13 +234,14 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     title2 = movie.get("title", "Unknown_Title").replace(" ", "_").replace("/", "_")
     poster_url = movie.get("full-size cover url", None)
 
-    poster_url = download_imdb_poster(poster_url, title2)
-    print("test1")
-    if poster_url:
-        poster_url = await upload_to_wordpress(poster_url,user_id)
+    poster_path = download_imdb_poster(poster_url, title2)
+featured_image_id = None
+
+if poster_path:
+    featured_image_id = await upload_to_wordpress(poster_path, user_id)
     
 
-    print(poster_url)
+    print(poster_path)
         
     # Generate Screenshot Links in HTML
     #ss2=ss2.format(link=link )
