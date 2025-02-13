@@ -235,10 +235,11 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     poster_url = movie.get("full-size cover url", None)
 
     poster_path = download_imdb_poster(poster_url, title2)
-featured_image_id = None
+    
+    featured_image_id = None
 
-if poster_path:
-    featured_image_id = await upload_to_wordpress(poster_path, user_id)
+    if poster_path:
+        featured_image_id = await upload_to_wordpress(poster_path, user_id)
     
 
     print(poster_path)
