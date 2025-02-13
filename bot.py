@@ -288,7 +288,7 @@ async def generate_post(client, message, user_id, imdb_url, audios, category, qu
     print("test2")
     Title= f"{title} {year}"
     user_id=message.chat.id
-    post_url = await post_to_wordpress(file_path, Title,user_id)
+    post_url = await post_to_wordpress(file_path, Title, user_id, featured_image_id)
     
     print("test3")
 
