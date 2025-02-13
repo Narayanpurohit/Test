@@ -175,7 +175,7 @@ async def collect_post_details(client, message, user_id, imdb_link):
     # Step 3: Ask for Quality
     await message.reply_text(
         "🎞 Send me the **Quality** (Choose from below):\n"
-        "`CAM, HDCAM, TS, HDTS, WEBRip, WEB-DL, HDTV, PDTV, DVDScr, DVDRip, BDRip, BRRip, REMUX, HDRip, 4K UHD BluRay Rip, Lossless`"
+        "`CAM`, `HDCAM`, `TS`, `HDTS`, `WEBRip`, `WEB-DL`, `HDTV`, `PDTV`, `DVDScr`, `DVDRip`, `BDRip`, `BRRip`, `REMUX`, `HDRip`, `4K UHD BluRay Rip`, `Lossless`"
     )
     quality = (await client.listen(message.chat.id)).text.strip()
 
